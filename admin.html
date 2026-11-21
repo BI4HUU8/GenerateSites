@@ -1,0 +1,1869 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>admin</title>
+    <style>
+        :root {
+            color-scheme: light;
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+            color: #202334;
+            background: #83858a;
+        }
+        * { box-sizing: border-box; }
+        body { max-width: 1080px; margin: 0 auto; padding: 32px 20px 56px; }
+        h1, h2, p { margin-top: 0; }
+        h1 { margin-bottom: 8px; }
+        .intro, .panel {
+            background: #eee;
+            border: 1px solid #e1e5ef;
+            border-radius: 12px;
+            padding: 24px;
+            box-shadow: 0 4px 16px rgba(27, 38, 70, .05);
+        }
+        .intro { margin-bottom: 20px; }
+        .intro p { margin-bottom: 0; color: #596174; }
+        .layout { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 20px; }
+        .panel h2 { font-size: 1.15rem; }
+        .field { display: grid; gap: 6px; margin-bottom: 16px; }
+        label, legend { font-weight: 600; font-size: .92rem; }
+        input, textarea, select, button { font: inherit; }
+        select { border: 1px solid #cbd1df; border-radius: 7px; padding: 10px 11px; color: inherit; background: #fff; }
+        input[type="text"], input[type="url"], .link-label, .link-url {
+            width: 100%;
+            min-width: 0;
+            border: 1px solid #cbd1df;
+            border-radius: 7px;
+            padding: 10px 11px;
+            color: inherit;
+            background: #fff;
+        }
+        input[type="color"] { width: 48px; height: 40px; padding: 3px; border: 1px solid #cbd1df; border-radius: 7px; background: #fff; }
+        .color-fields { display: flex; gap: 20px; flex-wrap: wrap; }
+        .color-field { display: flex; align-items: center; gap: 9px; }
+        .option-list { display: grid; gap: 10px; }
+        .option {
+            display: flex;
+            align-items: flex-start;
+            gap: 9px;
+            font-weight: 400;
+        }
+        .option input { margin-top: 4px; }
+        .option-description { display: block; margin-top: 2px; color: #657087; font-size: .83rem; }
+        .links-list { display: grid; gap: 10px; }
+        .link-row { display: grid; grid-template-columns: 1fr 1.2fr auto auto; gap: 8px; align-items: center; }
+        button {
+            border: 1px solid #cbd1df;
+            border-radius: 7px;
+            padding: 15px 20px;
+            cursor: pointer;
+            font-weight: 650;
+        }
+        button:focus-visible, input:focus-visible, textarea:focus-visible { outline: 3px solid #aeb8ff; outline-offset: 2px; }
+        .primary { color: #fff; background: #5146e5; }
+        .primary:hover { background: #4036c7; }
+        .secondary { color: #373d50; background: #edf0f7; }
+        .secondary:hover { background: #e0e5f0; }
+        .edit-link { white-space: nowrap; }
+        .remove-link { padding: 8px 10px; color: #a12636; background: #fff0f1; }
+        .actions { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 18px; }
+        .preview-wrap, .output-wrap {
+            background: #eee; 
+            margin-top: 20px; 
+            margin-bottom: 20px; 
+            border-radius: 12px; 
+            padding: 24px; 
+            box-shadow: 0 4px 16px rgba(27, 38, 70, .05); }
+        .preview {
+            min-height: 76px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 20px;
+            padding: 16px 20px;
+            border: 1px solid #e1e5ef;
+            border-radius: 9px;
+        }
+        .preview-stage {
+            position: relative;
+            min-height: 150px;
+            overflow: hidden;
+            border: 1px solid #d5dbea;
+            border-radius: 9px;
+            background: linear-gradient(135deg, #dce8f4, #b9c9de);
+        }
+        .preview-stage::after {
+            content: "Наступний блок сторінки";
+            display: block;
+            padding: 82px 20px 14px;
+            color: #34425a;
+            font-size: .9rem;
+        }
+        .preview { position: relative; z-index: 1; }
+        .preview.is-air { position: absolute; inset: 0 0 auto; background: transparent !important; }
+        .preview-phone { white-space: nowrap; }
+        .preview-mode { margin: 8px 0 0; color: #657087; font-size: .85rem; }
+        .preview img { max-width: 150px; max-height: 44px; object-fit: contain; }
+        .preview-text-logo { font-size: 1.25rem; font-weight: 800; text-decoration: none; }
+        .preview nav { display: flex; flex-wrap: wrap; gap: 18px; }
+        .preview a { text-decoration: none; }
+        .section-list { display: grid; gap: 16px; }
+        .body-section { padding: 18px; border: 1px solid #e1e5ef; border-radius: 9px; background: #fbfcff; }
+        .body-section h3 { margin: 0 0 14px; font-size: 1rem; }
+        .body-section .field:last-child { margin-bottom: 0; }
+        .section-actions { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-bottom: 12px; }
+        .section-actions h3 { flex: 1; margin: 0; }
+        .section-collapse { display: inline-flex; align-items: center; gap: 8px; padding: 0; color: inherit; background: transparent; text-align: left; }
+        .section-collapse::before { content: "−"; display: inline-grid; width: 24px; height: 24px; place-items: center; border: 1px solid #cbd1df; border-radius: 6px; font-size: 1rem; }
+        .section-collapse[aria-expanded="false"]::before { content: "+"; }
+        .section-settings[hidden] { display: none; }
+        .body-section.is-collapsed .section-actions { margin-bottom: 0; }
+        .section-enabled { display: flex; align-items: center; gap: 6px; margin-left: auto; font-size: .85rem; font-weight: 500; }
+        .section-enabled input { margin: 0; }
+        .body-page-list { display: grid; gap: 10px; margin-bottom: 16px; }
+        .body-page-card { overflow: hidden; border: 1px solid #e1e5ef; border-radius: 9px; background: #fbfcff; }
+        .body-page-header { display: flex; align-items: center; gap: 10px; padding: 8px 14px; }
+        .body-page-toggle { display: flex; flex: 1; align-items: center; justify-content: flex-start; gap: 12px; min-width: 0; padding: 7px 0; color: inherit; background: transparent; text-align: left; }
+        .body-page-title { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .body-page-toggle::before { content: "+"; display: inline-grid; flex: 0 0 24px; width: 24px; height: 24px; place-items: center; border: 1px solid #cbd1df; border-radius: 6px; }
+        .body-page-toggle[aria-expanded="true"]::before { content: "−"; }
+        .body-page-content { padding: 0 14px 14px; }
+        .body-page-content[hidden], .body-page-editor[hidden] { display: none; }
+        .body-page-editor { padding-top: 8px; }
+        .body-block-add { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+        .body-block-add select { min-height: 40px; padding: 7px 10px; border: 1px solid #cbd1df; border-radius: 7px; color: inherit; background: #fff; font: inherit; }
+        .body-colors { display: flex; gap: 14px; flex-wrap: wrap; }
+        .body-colors .field { flex: 1 1 180px; }
+        .body-page-fields { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
+        .body-page-fields .field { margin-bottom: 16px; }
+        .body-page-fields input { width: 100%; min-width: 0; border: 1px solid #cbd1df; border-radius: 7px; padding: 10px 11px; color: inherit; background: #fff; font: inherit; }
+        #telephoneField[hidden] { display: none; }
+        #logoTextField[hidden], #logoImageField[hidden] { display: none; }
+        .faq-editor { display: grid; gap: 12px; margin-top: 14px; }
+        .faq-items { display: grid; gap: 12px; }
+        .faq-item-editor { display: grid; gap: 10px; padding: 14px; border: 1px solid #dfe3ea; border-radius: 8px; background: #fff; }
+        .faq-item-editor textarea { min-height: 96px; }
+        .faq-item-editor .remove-link { justify-self: start; }
+        .body-preview { display: grid; gap: 18px; }
+        .body-preview .generated-body__hero { min-height: 220px; }
+        .body-preview .generated-body__about { padding: 28px; }
+        .body-preview .generated-body__about-images { max-height: 260px; }
+        .body-preview .generated-body__about-images img:first-child { height: 220px; }
+        .body-preview .generated-body__about-images img:not(:first-child) { height: 105px; }
+        textarea {
+            width: 100%;
+            min-height: 150px;
+            resize: vertical;
+            border: 1px solid #cbd1df;
+            border-radius: 7px;
+            padding: 12px;
+            color: #202334;
+            background: #f8f9fc;
+            font: 13px/1.5 ui-monospace, SFMono-Regular, Consolas, monospace;
+        }
+        #generatedSiteHtml { min-height: 420px; }
+        .status { min-height: 1.5em; margin: 12px 0 0; color: #3a526f; font-size: .92rem; }
+        .status.error { color: #a12636; }
+        .hint { margin: -8px 0 16px; color: #657087; font-size: .85rem; }
+        .seo-fields { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
+        .seo-fields .field { margin-bottom: 16px; }
+        .seo-fields textarea { min-height: 86px; }
+        @media (max-width: 760px) {
+            body { padding: 20px 12px 36px; }
+            .layout { grid-template-columns: 1fr; }
+            .panel, .intro { padding: 18px; }
+            .seo-fields { grid-template-columns: 1fr; }
+            .link-row { grid-template-columns: 1fr auto auto; }
+            .link-url { grid-column: 1; }
+            .edit-link, .remove-link { grid-column: 2; grid-row: 1 / span 2; }
+            .remove-link { grid-column: 3; }
+            .preview { align-items: flex-start; flex-direction: column; }
+        }
+    </style>
+
+<style>
+  .cookie-banner {
+    position: fixed;
+    bottom: 16px;
+    right: 16px;
+    max-width: 420px;
+    background: #18181b;
+    color: #f4f4f5;
+    padding: 20px;
+    border: 1px solid #27272a;
+    border-radius: 12px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+    z-index: 99999;
+    font-family: system-ui, -apple-system, sans-serif;
+    font-size: 13px;
+    line-height: 1.5;
+    display: none;
+    animation: fadeInScale 0.3s ease-out;
+  }
+
+  .cookie-text strong {
+    display: block;
+    font-size: 15px;
+    margin-bottom: 6px;
+    color: #ffffff;
+  }
+
+  .cookie-text p {
+    margin: 0 0 16px 0;
+    color: #a1a1aa;
+  }
+
+  .cookie-text b {
+    color: #e4e4e7;
+    font-weight: 500;
+  }
+
+  .cookie-buttons {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .cookie-btn {
+    width: 100%;
+    padding: 10px 14px;
+    border: none;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.2s, opacity 0.2s;
+  }
+
+  .cookie-btn.accept {
+    background: #6366f1; /* Акцентний колір під UI редактора */
+    color: #ffffff;
+  }
+
+  .cookie-btn.accept:hover {
+    background: #4f46e5;
+  }
+
+  .cookie-btn.decline {
+    background: #27272a;
+    color: #d4d4d8;
+  }
+
+  .cookie-btn.decline:hover {
+    background: #3f3f46;
+  }
+
+  @keyframes fadeInScale {
+    from {
+      opacity: 0;
+      transform: translateY(12px) scale(0.98);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0) scale(1);
+    }
+  }
+
+  @media (max-width: 480px) {
+    .cookie-banner {
+      left: 12px;
+      right: 12px;
+      bottom: 12px;
+      max-width: none;
+    }
+  }
+</style>
+
+
+</head>
+<body>
+    <header class="intro">
+        <h1>Генератор сайту</h1>
+    </header>
+
+    <main>
+            <section class="panel" aria-labelledby="settings-title">
+                <h2 id="settings-title">Налаштування</h2>
+                <form id="settingsForm">
+                    <div class="field">
+                        <label for="logoType">Варіант логотипа</label>
+                        <select id="logoType" name="logoType">
+                            <option value="image">Зображення</option>
+                            <option value="text">Текст</option>
+                        </select>
+                    </div>
+                    <div id="logoImageField" class="field">
+                        <label for="logo">URL логотипа</label>
+                        <input id="logo" name="logo" type="text" placeholder="/logo.png">
+                    </div>
+                    <div id="logoTextField" class="field" hidden>
+                        <label for="logoText">Текст логотипа</label>
+                        <input id="logoText" name="logoText" type="text" placeholder="Назва компанії">
+                    </div>
+                    <fieldset class="field" style="border: 0; padding: 0; margin-left: 0;">
+                        <legend>Кольори</legend>
+                        <div class="color-fields">
+                            <label class="color-field" for="background">
+                                Фон <input id="background" name="background" type="color">
+                            </label>
+                            <label class="color-field" for="textColor">
+                                Текст <input id="textColor" name="textColor" type="color">
+                            </label>
+                        </div>
+                    </fieldset>
+                    <fieldset class="field" style="border: 0; padding: 0; margin-left: 0;">
+                        <legend>Настройки header</legend>
+                        <div class="option-list">
+                            <label class="option">
+                                <input id="air" name="air" type="checkbox">
+                                <span>Air — прозора шапка поверх наступного блоку.</span>
+                            </label>
+                            <label class="option">
+                                <input id="fixed" name="fixed" type="checkbox">
+                                <span>Fixed — закріпити шапку у верхній частині екрана.</span>
+                            </label>
+                            <label class="option">
+                                <input id="blackTheme" name="blackTheme" type="checkbox">
+                                <span>Темно-світла тема.</span>
+                            </label>
+                            <label class="option">
+                                <input id="telephoneEnabled" name="telephoneEnabled" type="checkbox">
+                                <span>Показувати телефон.</span>
+                            </label>
+                        </div>
+                    </fieldset>
+                    <div id="telephoneField" class="field" hidden>
+                        <label for="telephone">Номер телефону</label>
+                        <input id="telephone" name="telephone" type="tel" placeholder="+380 00 000 00 00" disabled>
+                        <label for="telephonePosition">Розміщення телефону</label>
+                        <select id="telephonePosition" name="telephonePosition">
+                            <option value="before">Перед меню</option>
+                            <option value="after">Після меню</option>
+                        </select>
+                    </div>
+                    <div class="field">
+                        <label>Посилання меню</label>
+                        <div id="linksList" class="links-list"></div>
+                    </div>
+                    <div class="actions">
+                        <button class="primary" type="submit">Згенерувати</button>
+                    </div>
+                    <p id="status" class="status" role="status" aria-live="polite"></p>
+                </form>
+            </section>
+
+            <section class="panel" aria-labelledby="seo-settings-title">
+                <h2 id="seo-settings-title">Налаштування SEO GEO</h2>
+                <p class="hint">Метадані та геолокація будуть додані в <code>&lt;head&gt;</code> згенерованого сайту.</p>
+                <div class="seo-fields">
+                    <label class="field" for="seoTitle">SEO заголовок
+                        <input id="seoTitle" type="text" placeholder="Назва сайту">
+                    </label>
+                    <label class="field" for="seoDescription">Meta description
+                        <textarea id="seoDescription" placeholder="Короткий опис сайту для пошукових систем"></textarea>
+                    </label>
+                    <label class="field" for="seoKeywords">Ключові слова
+                        <input id="seoKeywords" type="text" placeholder="послуга, місто, компанія">
+                    </label>
+                    <label class="field" for="seoCanonical">Canonical URL
+                        <input id="seoCanonical" type="url" placeholder="https://example.com/">
+                    </label>
+                    <label class="field" for="seoRobots">Robots
+                        <input id="seoRobots" type="text" placeholder="index, follow">
+                    </label>
+                    <label class="field" for="seoOgTitle">Open Graph заголовок
+                        <input id="seoOgTitle" type="text" placeholder="Назва для соцмереж">
+                    </label>
+                    <label class="field" for="seoOgDescription">Open Graph опис
+                        <textarea id="seoOgDescription" placeholder="Опис для соцмереж"></textarea>
+                    </label>
+                    <label class="field" for="seoOgImage">Open Graph зображення
+                        <input id="seoOgImage" type="url" placeholder="https://example.com/image.jpg">
+                    </label>
+                    <label class="field" for="geoRegion">GEO регіон
+                        <input id="geoRegion" type="text" placeholder="UA-30 або UA-KY">
+                    </label>
+                    <label class="field" for="geoPlacename">GEO населений пункт
+                        <input id="geoPlacename" type="text" placeholder="Київ">
+                    </label>
+                    <label class="field" for="geoPosition">GEO координати
+                        <input id="geoPosition" type="text" placeholder="50.4501;30.5234">
+                    </label>
+                    <label class="field" for="geoLanguage">Мова контенту
+                        <input id="geoLanguage" type="text" placeholder="uk">
+                    </label>
+                </div>
+            </section>
+
+
+
+
+        <section class="preview-wrap" aria-labelledby="preview-title">
+            <h2 id="preview-title">Попередній перегляд шапки сайту</h2>
+            <div class="preview-stage">
+                <div id="preview" class="preview"></div>
+            </div>
+            <p id="previewMode" class="preview-mode"></p>
+        </section>
+
+
+
+
+            <section class="panel" aria-labelledby="body-settings-title">
+                <h2 id="body-settings-title">Блоки сайту</h2>
+                <div class="body-colors">
+                    <label class="field" for="bodyBackground">Фон сторінки за замовчуванням
+                        <input id="bodyBackground" type="color">
+                    </label>
+                    <label class="field" for="bodyTextColor">Колір тексту
+                        <input id="bodyTextColor" type="color">
+                    </label>
+                </div>
+                <div id="bodyPageList" class="body-page-list"></div>
+                <div id="bodyPageEditorParking" hidden>
+                    <div id="bodyPageEditor" class="body-page-editor" hidden>
+                        <div class="body-page-fields">
+                            <label class="field" for="bodyPageName">Назва сторінки
+                                <input id="bodyPageName" type="text" placeholder="Наприклад, Про нас">
+                            </label>
+                            <label class="field" for="bodyPageSlug">Адреса сторінки
+                                <input id="bodyPageSlug" type="text" placeholder="about">
+                            </label>
+                        </div>
+                        <div id="bodySections" class="section-list"></div>
+                    </div>
+                </div>
+                </section>
+
+                <section class="panel" >
+                    <div class="actions body-block-add">
+                        <select id="newBodySection" aria-label="Тип нового блоку">
+                            <option value="hero">Hero — обкладинка</option>
+                            <option value="about">About — про практику</option>
+                            <option value="contact">Contact — контакти</option>
+                            <option value="faq">FAQ — поширені питання</option>
+                            <option value="features">Features — переваги</option>
+                        </select>
+                        <button id="addBodySection" class="secondary" type="button">Додати блок сайту</button>
+                    </div>
+                    <div class="actions body-block-add">
+                        <button id="addBodyPage" class="secondary" type="button">Додати сторінку</button>
+                    </div>
+                </section>
+
+
+
+
+
+
+        <section class="output-wrap" aria-labelledby="body-preview-title">
+            <h2 id="body-preview-title">Попередній перегляд сайту</h2>
+            <div id="bodyPreview" class="body-preview"></div>
+            <div class="actions">
+                <button id="downloadSiteHtml" class="secondary" type="button">Скачати сайт index.html</button>
+                <button id="downloadSettingsJson" class="secondary" type="button">Скачати налаштування сай</button>
+                <a href="admin.html" download="admin.html"><button class="secondary" type="button">Скачати admin.html</button></a>
+                <button id="uploadSettingsJson" class="secondary" type="button">Завантажити налаштування сайту</button>
+                <input id="settingsJsonFile" type="file" accept=".json,application/json" hidden>
+            </div>
+        </section>
+
+        <section class="output-wrap" aria-labelledby="output-title">
+            <h2 id="output-title">Згенерований HTML сайту</h2>
+                <button id="copySiteHtml" class="secondary" type="button">Копіювати код сайту</button>
+            <textarea id="generatedSiteHtml" aria-label="Згенерований HTML сайту" readonly></textarea>
+        </section>
+
+
+            <section class="panel" aria-labelledby="json-title">
+                <h2 id="json-title">JSON налаштувань</h2>
+                <p class="hint">Параметри header і body зберігаються у cookie <code>setting</code>.</p>
+                <textarea id="settingsJson" aria-label="JSON налаштувань" readonly></textarea>
+            </section>
+
+
+    </main>
+
+<div id="cookie-banner" class="cookie-banner">
+  <div class="cookie-content">
+    <div class="cookie-text">
+      <strong>Збереження проєктів та cookies</strong>
+      <p>
+        Наш генератор використовує <b>локальне сховище браузера (localStorage)</b>, щоб автоматично зберігати ваші налаштування, шаблони та прогрес без реєстрації.
+      </p>
+    </div>
+    <div class="cookie-buttons">
+      <button id="cookie-accept" class="cookie-btn accept">Зрозуміло, прийняти все</button>
+      <button id="cookie-decline" class="cookie-btn decline">Тільки локальне збереження</button>
+    </div>
+  </div>
+</div>
+
+
+
+    <script>
+        const DEFAULT_SETTINGS = {
+            header: {
+                logoType: "image",
+                logo: "/logo.png",
+                logoText: "",
+                background: "#ffffff",
+                textColor: "#222222",
+                air: false,
+                fixed: false,
+                blackTheme: false,
+                telephoneEnabled: false,
+                telephone: "",
+                telephonePosition: "before",
+                links: [
+                    { label: "About", url: "#about" },
+                    { label: "Contact", url: "#contact" }
+                ]
+            },
+            body: {
+                template1: {
+                    enabled: true,
+                    background: "#edf5f9",
+                    textColor: "#142238",
+                    pages: [
+                        { name: "Головна", slug: "home", sections: [] }
+                    ]
+                }
+            },
+            seo: {
+                title: "",
+                description: "",
+                keywords: "",
+                canonical: "",
+                robots: "index, follow",
+                ogTitle: "",
+                ogDescription: "",
+                ogImage: "",
+                geo: {
+                    region: "",
+                    placename: "",
+                    position: "",
+                    language: "uk"
+                }
+            }
+        };
+        const COOKIE_NAME = "setting";
+        const COOKIE_MAX_BYTES = 3800;
+        const form = document.getElementById("settingsForm");
+        const linksList = document.getElementById("linksList");
+        const settingsJson = document.getElementById("settingsJson");
+        const generatedSiteHtml = document.getElementById("generatedSiteHtml");
+        const preview = document.getElementById("preview");
+        const bodySections = document.getElementById("bodySections");
+        const bodyPreview = document.getElementById("bodyPreview");
+        const previewMode = document.getElementById("previewMode");
+        const status = document.getElementById("status");
+        let bodyPages = [];
+        let activeBodyPageIndex = 0;
+
+        function escapeHtml(value) {
+            return String(value).replace(/[&<>"']/g, (character) => ({
+                "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"
+            })[character]);
+        }
+
+        function safeUrl(value, fieldName) {
+            const url = value.trim();
+            if (!url) return "";
+            if (/^(https?:|mailto:|tel:)/i.test(url) || /^(\/|\.\/|\.\.\/|#|\?)/.test(url)) {
+                return url;
+            }
+            throw new Error(`${fieldName}: використовуйте http(s), mailto, tel або відносний URL.`);
+        }
+
+        function readSettings(value) {
+            if (!value || typeof value !== "object" || !value.header || typeof value.header !== "object") {
+                throw new Error("Неправильний формат налаштувань у setting.json.");
+            }
+            const header = value.header;
+            if (!Array.isArray(header.links)) throw new Error("Список посилань має бути масивом.");
+            if (!/^#[0-9a-f]{6}$/i.test(header.background) || !/^#[0-9a-f]{6}$/i.test(header.textColor)) {
+                throw new Error("Кольори мають бути в HEX-форматі #RRGGBB.");
+            }
+            const logoType = header.logoType === "text" ? "text" : "image";
+            const logo = logoType === "image"
+                ? safeUrl(String(header.logo || ""), "URL логотипа")
+                : "";
+            const logoText = String(header.logoText || "").trim();
+            const telephoneEnabled = header.telephoneEnabled === true;
+            const telephone = String(header.telephone || "").trim();
+            const telephonePosition = header.telephonePosition === "after" ? "after" : "before";
+            const normalizedTelephone = telephone.replace(/[^\d+]/g, "");
+            if (telephoneEnabled && !/^\+?\d{5,15}$/.test(normalizedTelephone)) {
+                throw new Error("Вкажіть номер телефону з 5–15 цифр, можна з + на початку.");
+            }
+            const links = header.links.map((link, index) => {
+                if (!link || typeof link.label !== "string" || typeof link.url !== "string") {
+                    throw new Error(`Посилання ${index + 1} має містити label і url.`);
+                }
+                return { label: link.label.trim(), url: safeUrl(link.url, `Посилання ${index + 1}`) };
+            }).filter((link) => link.label && link.url);
+            const seoInput = value.seo && typeof value.seo === "object" ? value.seo : {};
+            const geoInput = seoInput.geo && typeof seoInput.geo === "object" ? seoInput.geo : {};
+            const seoText = (field, fallback = "") => {
+                const text = seoInput[field];
+                return String(text === undefined ? fallback : text).trim();
+            };
+            const seo = {
+                title: seoText("title"),
+                description: seoText("description"),
+                keywords: seoText("keywords"),
+                canonical: safeUrl(seoText("canonical"), "Canonical URL"),
+                robots: seoText("robots", "index, follow"),
+                ogTitle: seoText("ogTitle"),
+                ogDescription: seoText("ogDescription"),
+                ogImage: safeUrl(seoText("ogImage"), "Open Graph зображення"),
+                geo: {
+                    region: String(geoInput.region || "").trim(),
+                    placename: String(geoInput.placename || "").trim(),
+                    position: String(geoInput.position || "").trim(),
+                    language: String(geoInput.language || "uk").trim()
+                }
+            };
+            const bodyConfig = value.body?.template1 || DEFAULT_SETTINGS.body.template1;
+            if (!/^#[0-9a-f]{6}$/i.test(bodyConfig.background || "") ||
+                !/^#[0-9a-f]{6}$/i.test(bodyConfig.textColor || "")) {
+                throw new Error("Кольори body мають бути в HEX-форматі #RRGGBB.");
+            }
+            const pageInputs = Array.isArray(bodyConfig.pages)
+                ? bodyConfig.pages
+                : Array.isArray(bodyConfig.sections)
+                    ? [{ name: "Головна", slug: "home", sections: bodyConfig.sections }]
+                    : null;
+            if (!pageInputs || !pageInputs.length) throw new Error("Додайте щонайменше одну сторінку body.");
+            const usedSlugs = new Set();
+            const pages = pageInputs.map((page, pageIndex) => {
+                if (!page || typeof page.name !== "string" || typeof page.slug !== "string" ||
+                    !Array.isArray(page.sections)) {
+                    throw new Error(`Сторінка ${pageIndex + 1} має містити name, slug і масив sections.`);
+                }
+                const name = page.name.trim();
+                const slug = page.slug.trim().toLowerCase();
+                if (!name) throw new Error(`Вкажіть назву сторінки ${pageIndex + 1}.`);
+                if (!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(slug)) {
+                    throw new Error(`Slug сторінки «${name}» має містити лише латинські літери, цифри та дефіси.`);
+                }
+                if (usedSlugs.has(slug)) throw new Error(`Slug «${slug}» використовується кілька разів.`);
+                usedSlugs.add(slug);
+                const sections = page.sections.map((section, index) => {
+                    const blockLabel = `Блок ${index + 1} сторінки «${name}»`;
+                    if (!section || !["hero", "about", "contact", "faq", "features"].includes(section.type)) {
+                        throw new Error(`${blockLabel}: підтримуються типи hero, about, contact, faq і features.`);
+                    }
+                    const text = (value, label) => {
+                        if (value !== undefined && typeof value !== "string") {
+                            throw new Error(`${blockLabel}: поле «${label}» має бути текстом.`);
+                        }
+                        return String(value || "").trim();
+                    };
+                    const sectionBase = { type: section.type, enabled: section.enabled !== false };
+                    if (section.type === "hero") {
+                        const image = safeUrl(String(section.backgroundImage || section.image || ""), `Фонове зображення (${blockLabel})`);
+                        const buttonUrl = safeUrl(text(section.buttonUrl, "URL кнопки"), `URL кнопки (${blockLabel})`);
+                        return {
+                            ...sectionBase,
+                            eyebrow: text(section.eyebrow, "надзаголовок"),
+                            title: text(section.title, "заголовок"),
+                            subtitle: text(section.subtitle, "опис"),
+                            backgroundImage: image,
+                            buttonLabel: text(section.buttonLabel, "текст кнопки"),
+                            buttonUrl
+                        };
+                    }
+                    if (section.type === "about") {
+                        if (!Array.isArray(section.images) || !Array.isArray(section.items)) {
+                            throw new Error(`${blockLabel}: images та items мають бути масивами.`);
+                        }
+                        return {
+                            ...sectionBase,
+                            eyebrow: text(section.eyebrow, "надзаголовок"),
+                            title: text(section.title, "заголовок"),
+                            text: text(section.text ?? section.description, "опис"),
+                            images: section.images.map((image, imageIndex) =>
+                                safeUrl(String(image || ""), `Зображення ${imageIndex + 1} (${blockLabel})`)
+                            ).filter(Boolean),
+                            items: section.items.map((item) => text(item, "пункт списку")).filter(Boolean),
+                            buttonLabel: text(section.buttonLabel, "текст кнопки"),
+                            buttonUrl: safeUrl(text(section.buttonUrl, "URL кнопки"), `URL кнопки (${blockLabel})`)
+                        };
+                    }
+                    if (section.type === "contact") {
+                        const phone = text(section.phone, "телефон");
+                        const normalizedPhone = phone.replace(/[^\d+]/g, "");
+                        if (phone && !/^\+?\d{5,15}$/.test(normalizedPhone)) {
+                            throw new Error(`${blockLabel}: телефон має містити 5–15 цифр, можна з + на початку.`);
+                        }
+                        const email = text(section.email, "email");
+                        if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+                            throw new Error(`${blockLabel}: вкажіть коректну email-адресу.`);
+                        }
+                        return {
+                            ...sectionBase,
+                            title: text(section.title, "заголовок"),
+                            intro: text(section.intro, "опис"),
+                            phone,
+                            email,
+                            address: text(section.address, "адреса"),
+                            hours: text(section.hours, "графік роботи")
+                        };
+                    }
+                    if (section.type === "faq") {
+                        if (!Array.isArray(section.items)) throw new Error(`${blockLabel}: items має бути масивом.`);
+                        return {
+                            ...sectionBase,
+                            title: text(section.title, "заголовок"),
+                            items: section.items.map((item, itemIndex) => {
+                                if (!item || typeof item !== "object") {
+                                    throw new Error(`Питання ${itemIndex + 1} (${blockLabel}) має бути об’єктом.`);
+                                }
+                                return {
+                                    question: text(item.question, "запитання"),
+                                    answer: text(item.answer, "відповідь")
+                                };
+                            }).filter((item) => item.question || item.answer)
+                        };
+                    }
+                    if (!Array.isArray(section.items)) throw new Error(`${blockLabel}: items має бути масивом.`);
+                    return {
+                        ...sectionBase,
+                        title: text(section.title, "заголовок"),
+                        items: section.items.map((item, itemIndex) => {
+                            if (!item || typeof item !== "object") {
+                                throw new Error(`Перевага ${itemIndex + 1} (${blockLabel}) має бути об’єктом.`);
+                            }
+                            return {
+                                icon: safeUrl(String(item.icon || ""), `Іконка переваги ${itemIndex + 1} (${blockLabel})`),
+                                title: text(item.title, "назва переваги"),
+                                description: text(item.description, "опис переваги")
+                            };
+                        })
+                    };
+                });
+                return { name, slug, sections };
+            });
+            return {
+                header: {
+                    logoType,
+                    logo,
+                    logoText,
+                    background: header.background,
+                    textColor: header.textColor,
+                    air: header.air === true,
+                    fixed: header.fixed === true,
+                    blackTheme: header.blackTheme === true,
+                    telephoneEnabled,
+                    telephone,
+                    telephonePosition,
+                    links
+                },
+                body: {
+                    template1: {
+                        enabled: true,
+                        background: bodyConfig.background,
+                        textColor: bodyConfig.textColor,
+                        pages
+                    }
+                },
+                seo
+            };
+        }
+
+        function pageSlugFromUrl(url) {
+            if (url.startsWith("#")) return url.slice(1).toLowerCase();
+            if (!url.startsWith("/") || url.startsWith("//")) return "";
+            return url.split(/[?#]/)[0].split("/").filter(Boolean).pop()?.toLowerCase() || "";
+        }
+
+        function pageForLink(link) {
+            const slug = pageSlugFromUrl(link.url);
+            return bodyPages.find((page) => page.slug === slug);
+        }
+
+        function addLinkRow(link = { label: "", url: "" }, pageSlug = "") {
+            const row = document.createElement("div");
+            row.className = "link-row";
+            row.dataset.pageSlug = pageSlug || pageForLink(link)?.slug || "";
+            const labelInput = document.createElement("input");
+            labelInput.className = "link-label";
+            labelInput.type = "text";
+            labelInput.placeholder = "Назва";
+            labelInput.value = link.label || "";
+            labelInput.setAttribute("aria-label", "Назва посилання");
+            const urlInput = document.createElement("input");
+            urlInput.className = "link-url";
+            urlInput.type = "text";
+            urlInput.placeholder = "/page або https://example.com";
+            urlInput.value = link.url || "";
+            urlInput.setAttribute("aria-label", "URL посилання");
+            urlInput.addEventListener("input", () => {
+                row.dataset.pageSlug = pageForLink({ url: urlInput.value })?.slug || "";
+                editButton.setAttribute("aria-label", row.dataset.pageSlug ? "Редагувати сторінку" : "Редагувати посилання");
+            });
+            const editButton = document.createElement("button");
+            editButton.className = "secondary edit-link";
+            editButton.type = "button";
+            editButton.textContent = "Редагувати";
+            editButton.setAttribute("aria-label", row.dataset.pageSlug ? "Редагувати сторінку" : "Редагувати посилання");
+            editButton.addEventListener("click", () => {
+                saveActiveBodyPage();
+                const pageIndex = bodyPages.findIndex((page) => page.slug === row.dataset.pageSlug);
+                if (pageIndex >= 0) {
+                    renderBodyPageEditor(pageIndex);
+                    refreshBodyPreview();
+                    document.getElementById("body-settings-title").scrollIntoView({ behavior: "smooth" });
+                    document.getElementById("bodyPageName").focus();
+                } else {
+                    labelInput.focus();
+                }
+            });
+            const removeButton = document.createElement("button");
+            removeButton.className = "remove-link";
+            removeButton.type = "button";
+            removeButton.textContent = "Видалити";
+            removeButton.addEventListener("click", () => {
+                const linkName = labelInput.value.trim() || urlInput.value.trim() || "це посилання";
+                if (window.confirm(`Видалити посилання «${linkName}»?`)) row.remove();
+            });
+            row.append(labelInput, urlInput, editButton, removeButton);
+            linksList.appendChild(row);
+        }
+
+        function addMissingPageLinks(pages) {
+            const linkedSlugs = new Set(
+                [...linksList.querySelectorAll(".link-row")]
+                    .map((row) => row.dataset.pageSlug)
+                    .filter(Boolean)
+            );
+            pages.slice(1).forEach((page) => {
+                if (linkedSlugs.has(page.slug)) return;
+                addLinkRow({ label: page.name, url: `#${page.slug}` }, page.slug);
+                linkedSlugs.add(page.slug);
+            });
+        }
+
+        function addBodyField(section, key, label, value, multiline = false, hint = "") {
+            const field = document.createElement("label");
+            field.className = "field";
+            field.textContent = label;
+            const input = document.createElement(multiline ? "textarea" : "input");
+            if (!multiline) input.type = "text";
+            input.dataset.key = key;
+            input.value = value || "";
+            if (hint) input.placeholder = hint;
+            field.appendChild(input);
+            section.appendChild(field);
+        }
+
+        function addFaqItemEditor(container, item = { question: "", answer: "" }) {
+            const row = document.createElement("div");
+            row.className = "faq-item-editor";
+            const questionField = document.createElement("label");
+            questionField.className = "field";
+            questionField.textContent = "Запитання";
+            const questionInput = document.createElement("input");
+            questionInput.type = "text";
+            questionInput.dataset.faqQuestion = "true";
+            questionInput.value = item.question || "";
+            questionInput.placeholder = "Наприклад, чи є термінове обслуговування?";
+            questionField.appendChild(questionInput);
+
+            const answerField = document.createElement("label");
+            answerField.className = "field";
+            answerField.textContent = "Відповідь";
+            const answerInput = document.createElement("textarea");
+            answerInput.dataset.faqAnswer = "true";
+            answerInput.value = item.answer || "";
+            answerInput.placeholder = "Введіть відповідь";
+            answerField.appendChild(answerInput);
+
+            const removeButton = document.createElement("button");
+            removeButton.className = "remove-link";
+            removeButton.type = "button";
+            removeButton.textContent = "Видалити питання";
+            removeButton.addEventListener("click", () => {
+                if (window.confirm("Видалити це запитання?")) {
+                    row.remove();
+                    refreshBodyPreview();
+                }
+            });
+            row.append(questionField, answerField, removeButton);
+            container.appendChild(row);
+        }
+
+        function addBodySection(sectionData = { type: "hero" }) {
+            const card = document.createElement("article");
+            card.className = "body-section is-collapsed";
+            card.dataset.type = sectionData.type;
+            const actions = document.createElement("div");
+            actions.className = "section-actions";
+            const heading = document.createElement("h3");
+            const headingText = {
+                hero: "Hero — обкладинка",
+                about: "About — про практику",
+                contact: "Contact — контакти",
+                faq: "FAQ — поширені питання",
+                features: "Features — переваги"
+            }[sectionData.type];
+            const collapseButton = document.createElement("button");
+            collapseButton.className = "section-collapse";
+            collapseButton.type = "button";
+            collapseButton.textContent = headingText;
+            collapseButton.setAttribute("aria-expanded", "false");
+            collapseButton.setAttribute("aria-label", `Розгорнути налаштування блока ${headingText}`);
+            collapseButton.addEventListener("click", () => {
+                const expanded = collapseButton.getAttribute("aria-expanded") === "true";
+                collapseButton.setAttribute("aria-expanded", String(!expanded));
+                collapseButton.setAttribute(
+                    "aria-label",
+                    `${expanded ? "Розгорнути" : "Згорнути"} налаштування блока ${headingText}`
+                );
+                card.classList.toggle("is-collapsed", expanded);
+                settings.hidden = expanded;
+            });
+            heading.appendChild(collapseButton);
+            const enabledLabel = document.createElement("label");
+            enabledLabel.className = "section-enabled";
+            const enabledInput = document.createElement("input");
+            enabledInput.type = "checkbox";
+            enabledInput.dataset.enabled = "true";
+            enabledInput.checked = sectionData.enabled !== false;
+            enabledLabel.append(enabledInput, document.createTextNode("Увімкнено"));
+            const removeButton = document.createElement("button");
+            removeButton.className = "remove-link";
+            removeButton.type = "button";
+            removeButton.textContent = "Видалити блок";
+            removeButton.addEventListener("click", () => {
+                if (window.confirm(`Видалити блок «${headingText}»?`)) card.remove();
+            });
+            actions.append(heading, enabledLabel, removeButton);
+            card.appendChild(actions);
+            const settings = document.createElement("div");
+            settings.className = "section-settings";
+            settings.hidden = true;
+            card.appendChild(settings);
+
+            if (sectionData.type === "hero") {
+                addBodyField(settings, "eyebrow", "Надзаголовок", sectionData.eyebrow);
+                addBodyField(settings, "title", "Заголовок", sectionData.title);
+                addBodyField(settings, "subtitle", "Опис", sectionData.subtitle, true);
+                addBodyField(settings, "backgroundImage", "URL фонового зображення", sectionData.backgroundImage || sectionData.image, false, "/images/hero.jpg");
+                addBodyField(settings, "buttonLabel", "Текст кнопки", sectionData.buttonLabel);
+                addBodyField(settings, "buttonUrl", "URL кнопки", sectionData.buttonUrl, false, "#contact");
+            } else if (sectionData.type === "about") {
+                addBodyField(settings, "eyebrow", "Надзаголовок", sectionData.eyebrow);
+                addBodyField(settings, "title", "Заголовок", sectionData.title);
+                addBodyField(settings, "text", "Опис", sectionData.text || sectionData.description, true);
+                addBodyField(settings, "images", "URL зображень (кожне з нового рядка)", (sectionData.images || []).join("\n"), true);
+                addBodyField(settings, "items", "Пункти списку (кожен з нового рядка)", (sectionData.items || []).join("\n"), true);
+                addBodyField(settings, "buttonLabel", "Текст кнопки", sectionData.buttonLabel);
+                addBodyField(settings, "buttonUrl", "URL кнопки", sectionData.buttonUrl, false, "#contact");
+            } else if (sectionData.type === "contact") {
+                addBodyField(settings, "title", "Заголовок", sectionData.title || "Contact");
+                addBodyField(settings, "intro", "Опис", sectionData.intro, true);
+                addBodyField(settings, "phone", "Телефон", sectionData.phone);
+                addBodyField(settings, "email", "Email", sectionData.email);
+                addBodyField(settings, "address", "Адреса", sectionData.address);
+                addBodyField(settings, "hours", "Графік роботи", sectionData.hours);
+            } else if (sectionData.type === "faq") {
+                addBodyField(settings, "title", "Заголовок", sectionData.title || "Common Questions");
+                const faqEditor = document.createElement("div");
+                faqEditor.className = "faq-editor";
+                const faqItems = document.createElement("div");
+                faqItems.className = "faq-items";
+                (sectionData.items || []).forEach((item) => addFaqItemEditor(faqItems, item));
+                const addButton = document.createElement("button");
+                addButton.className = "secondary";
+                addButton.type = "button";
+                addButton.textContent = "Додати питання";
+                addButton.addEventListener("click", () => {
+                    addFaqItemEditor(faqItems);
+                    refreshBodyPreview();
+                });
+                faqEditor.append(faqItems, addButton);
+                settings.appendChild(faqEditor);
+            } else {
+                addBodyField(settings, "title", "Заголовок", sectionData.title);
+                addBodyField(settings, "items", "Переваги: назва | опис | URL іконки (кожна з нового рядка)",
+                    (sectionData.items || []).map((item) => [item.title, item.description, item.icon].join(" | ")).join("\n"), true);
+            }
+            settings.addEventListener("input", () => refreshBodyPreview());
+            bodySections.appendChild(card);
+        }
+
+        function sectionsFromForm(container = bodySections) {
+            const sections = [...container.querySelectorAll(".body-section")].map((card) => {
+                const section = {
+                    type: card.dataset.type,
+                    enabled: card.querySelector("[data-enabled]").checked
+                };
+                card.querySelectorAll("[data-key]").forEach((input) => {
+                    const key = input.dataset.key;
+                    const value = input.value.trim();
+                    if (key === "images" || key === "items") {
+                        section[key] = value.split("\n").map((line) => line.trim()).filter(Boolean);
+                    } else {
+                        section[key] = value;
+                    }
+                });
+                if (section.type === "features") {
+                    section.items = section.items.map((line) => {
+                        const [title = "", description = "", icon = ""] = line.split("|").map((part) => part.trim());
+                        return { title, description, icon };
+                    });
+                }
+                if (section.type === "faq") {
+                    section.items = [...card.querySelectorAll(".faq-item-editor")].map((row) => ({
+                        question: row.querySelector("[data-faq-question]").value.trim(),
+                        answer: row.querySelector("[data-faq-answer]").value.trim()
+                    })).filter((item) => item.question || item.answer);
+                }
+                return section;
+            });
+            return sections;
+        }
+
+        function saveActiveBodyPage() {
+            const page = bodyPages[activeBodyPageIndex];
+            if (!page || document.getElementById("bodyPageEditor").hidden) return;
+            const previousSlug = page.slug;
+            const previousName = page.name;
+            page.name = document.getElementById("bodyPageName").value.trim();
+            page.slug = document.getElementById("bodyPageSlug").value.trim();
+            page.sections = sectionsFromForm();
+            linksList.querySelectorAll(".link-row").forEach((row) => {
+                if (row.dataset.pageSlug !== previousSlug) return;
+                const labelInput = row.querySelector(".link-label");
+                const urlInput = row.querySelector(".link-url");
+                if (labelInput.value === previousName) labelInput.value = page.name;
+                if (page.slug !== previousSlug) {
+                    const prefix = urlInput.value.startsWith("/") ? "/" : "#";
+                    urlInput.value = `${prefix}${page.slug}`;
+                }
+                row.dataset.pageSlug = page.slug;
+                row.querySelector(".edit-link").setAttribute("aria-label", "Редагувати сторінку");
+            });
+        }
+
+        function removeBodyPage(pageIndex) {
+            if (bodyPages.length <= 1) return;
+            const page = bodyPages[pageIndex];
+            if (!window.confirm(`Видалити сторінку «${page.name}» та всі її блоки?`)) return;
+            saveActiveBodyPage();
+            const removedSlug = page.slug;
+            bodyPages.splice(pageIndex, 1);
+            linksList.querySelectorAll(".link-row").forEach((row) => {
+                if (row.dataset.pageSlug === removedSlug) row.remove();
+            });
+            if (activeBodyPageIndex > pageIndex) activeBodyPageIndex -= 1;
+            else if (activeBodyPageIndex === pageIndex) {
+                activeBodyPageIndex = Math.min(pageIndex, bodyPages.length - 1);
+            }
+            renderBodyPageEditor(-1);
+            refreshBodyPreview();
+        }
+
+        function renderBodyPageList(openPageIndex = -1) {
+            const pageList = document.getElementById("bodyPageList");
+            const editor = document.getElementById("bodyPageEditor");
+            document.getElementById("bodyPageEditorParking").appendChild(editor);
+            pageList.replaceChildren();
+            editor.hidden = openPageIndex < 0;
+            bodyPages.forEach((page, index) => {
+                const card = document.createElement("article");
+                card.className = "body-page-card";
+                const header = document.createElement("div");
+                header.className = "body-page-header";
+                const toggle = document.createElement("button");
+                toggle.className = "body-page-toggle";
+                toggle.type = "button";
+                const title = document.createElement("span");
+                title.className = "body-page-title";
+                title.textContent = page.name || `Сторінка ${index + 1}`;
+                toggle.appendChild(title);
+                toggle.setAttribute("aria-expanded", String(index === openPageIndex));
+                toggle.setAttribute(
+                    "aria-label",
+                    `${index === openPageIndex ? "Згорнути" : "Розгорнути"} сторінку ${page.name || index + 1}`
+                );
+                const content = document.createElement("div");
+                content.className = "body-page-content";
+                content.hidden = index !== openPageIndex;
+                const removeButton = document.createElement("button");
+                removeButton.className = "remove-link";
+                removeButton.type = "button";
+                removeButton.textContent = "Видалити";
+                removeButton.disabled = bodyPages.length <= 1;
+                removeButton.setAttribute("aria-label", `Видалити сторінку ${page.name || index + 1}`);
+                removeButton.addEventListener("click", () => removeBodyPage(index));
+                if (index === 0 || page.slug === "home") removeButton.hidden = true;
+                toggle.addEventListener("click", () => {
+                    if (index === activeBodyPageIndex && !editor.hidden) {
+                        saveActiveBodyPage();
+                        renderBodyPageEditor(-1);
+                    } else {
+                        saveActiveBodyPage();
+                        activeBodyPageIndex = index;
+                        renderBodyPageEditor(index);
+                    }
+                    refreshBodyPreview();
+                });
+                header.append(toggle, removeButton);
+                card.append(header, content);
+                pageList.appendChild(card);
+                if (index === openPageIndex) content.appendChild(editor);
+            });
+        }
+
+        function renderBodyPageEditor(openPageIndex = activeBodyPageIndex) {
+            if (openPageIndex >= 0) {
+                activeBodyPageIndex = openPageIndex;
+                const page = bodyPages[openPageIndex];
+                if (!page) return;
+                document.getElementById("bodyPageName").value = page.name;
+                document.getElementById("bodyPageSlug").value = page.slug;
+                bodySections.replaceChildren();
+                page.sections.forEach(addBodySection);
+            }
+            renderBodyPageList(openPageIndex);
+        }
+
+        function bodySettingsFromForm() {
+            saveActiveBodyPage();
+            return {
+                template1: {
+                    enabled: true,
+                    background: document.getElementById("bodyBackground").value,
+                    textColor: document.getElementById("bodyTextColor").value,
+                    pages: bodyPages.map((page) => ({
+                        name: page.name,
+                        slug: page.slug,
+                        sections: page.sections
+                    }))
+                }
+            };
+        }
+
+        function settingsFromForm() {
+            const data = new FormData(form);
+            const links = [...linksList.querySelectorAll(".link-row")].map((row) => ({
+                label: row.querySelector(".link-label").value.trim(),
+                url: row.querySelector(".link-url").value.trim()
+            })).filter((link) => link.label || link.url);
+            return readSettings({
+                header: {
+                    logoType: data.get("logoType"),
+                    logo: data.get("logo"),
+                    logoText: data.get("logoText"),
+                    background: data.get("background"),
+                    textColor: data.get("textColor"),
+                    air: data.get("air") === "on",
+                    fixed: data.get("fixed") === "on",
+                    blackTheme: data.get("blackTheme") === "on",
+                    telephoneEnabled: data.get("telephoneEnabled") === "on",
+                    telephone: form.elements.telephone.value,
+                    telephonePosition: data.get("telephonePosition"),
+                    links
+                },
+                body: bodySettingsFromForm(),
+                seo: {
+                    title: document.getElementById("seoTitle").value,
+                    description: document.getElementById("seoDescription").value,
+                    keywords: document.getElementById("seoKeywords").value,
+                    canonical: document.getElementById("seoCanonical").value,
+                    robots: document.getElementById("seoRobots").value,
+                    ogTitle: document.getElementById("seoOgTitle").value,
+                    ogDescription: document.getElementById("seoOgDescription").value,
+                    ogImage: document.getElementById("seoOgImage").value,
+                    geo: {
+                        region: document.getElementById("geoRegion").value,
+                        placename: document.getElementById("geoPlacename").value,
+                        position: document.getElementById("geoPosition").value,
+                        language: document.getElementById("geoLanguage").value
+                    }
+                }
+            });
+        }
+
+        function updateForm(settings) {
+            const header = settings.header;
+            form.elements.logoType.value = header.logoType || "image";
+            form.elements.logo.value = header.logo;
+            form.elements.logoText.value = header.logoText || "";
+            document.getElementById("logoImageField").hidden = form.elements.logoType.value !== "image";
+            document.getElementById("logoTextField").hidden = form.elements.logoType.value !== "text";
+            form.elements.background.value = header.background;
+            form.elements.textColor.value = header.textColor;
+            form.elements.air.checked = header.air === true;
+            form.elements.fixed.checked = header.fixed === true;
+            form.elements.blackTheme.checked = header.blackTheme === true;
+            form.elements.telephoneEnabled.checked = header.telephoneEnabled === true;
+            form.elements.telephone.value = header.telephone || "";
+            form.elements.telephonePosition.value = header.telephonePosition || "before";
+            form.elements.telephone.disabled = !form.elements.telephoneEnabled.checked;
+            document.getElementById("telephoneField").hidden = !form.elements.telephoneEnabled.checked;
+            const body = settings.body.template1;
+            document.getElementById("bodyBackground").value = body.background;
+            document.getElementById("bodyTextColor").value = body.textColor;
+            const seo = settings.seo || DEFAULT_SETTINGS.seo;
+            document.getElementById("seoTitle").value = seo.title || "";
+            document.getElementById("seoDescription").value = seo.description || "";
+            document.getElementById("seoKeywords").value = seo.keywords || "";
+            document.getElementById("seoCanonical").value = seo.canonical || "";
+            document.getElementById("seoRobots").value = seo.robots || "index, follow";
+            document.getElementById("seoOgTitle").value = seo.ogTitle || "";
+            document.getElementById("seoOgDescription").value = seo.ogDescription || "";
+            document.getElementById("seoOgImage").value = seo.ogImage || "";
+            const geo = seo.geo || {};
+            document.getElementById("geoRegion").value = geo.region || "";
+            document.getElementById("geoPlacename").value = geo.placename || "";
+            document.getElementById("geoPosition").value = geo.position || "";
+            document.getElementById("geoLanguage").value = geo.language || "uk";
+            bodyPages = body.pages.map((page) => ({
+                name: page.name,
+                slug: page.slug,
+                sections: page.sections
+            }));
+            const homePage = bodyPages[0];
+            if (homePage && !homePage.sections.some((section) => section.type === "about")) {
+                homePage.sections.push(emptyBodySection("about"));
+            }
+            if (homePage && !homePage.sections.some((section) => section.type === "contact")) {
+                homePage.sections.push(emptyBodySection("contact"));
+            }
+            if (homePage && !homePage.sections.some((section) => section.type === "faq")) {
+                homePage.sections.push(emptyBodySection("faq"));
+            }
+            linksList.replaceChildren();
+            header.links.forEach((link) => addLinkRow(link));
+            const homeSections = new Set(homePage?.sections.map((section) => section.type) || []);
+            linksList.querySelectorAll(".link-row").forEach((row) => {
+                const label = row.querySelector(".link-label").value.trim().toLowerCase();
+                const urlInput = row.querySelector(".link-url");
+                const sectionSlug = label === "about" || label === "contact" ? label : "";
+                if (!sectionSlug || !homeSections.has(sectionSlug) ||
+                    ![`#${sectionSlug}`, `/${sectionSlug}`].includes(urlInput.value)) return;
+                urlInput.value = `#${sectionSlug}`;
+                row.dataset.pageSlug = "";
+                row.querySelector(".edit-link").setAttribute("aria-label", "Редагувати посилання");
+            });
+            addMissingPageLinks(bodyPages);
+            activeBodyPageIndex = 0;
+            renderBodyPageEditor(-1);
+        }
+
+        function emptyBodySection(type) {
+            if (type === "hero") {
+                return { type, enabled: true, eyebrow: "", title: "", subtitle: "", backgroundImage: "", buttonLabel: "", buttonUrl: "" };
+            }
+            if (type === "about") {
+                return { type, enabled: true, eyebrow: "", title: "About", text: "", images: [], items: [], buttonLabel: "", buttonUrl: "" };
+            }
+            if (type === "contact") {
+                return { type, enabled: true, title: "Contact", intro: "Напишіть або зателефонуйте нам.", phone: "", email: "", address: "", hours: "" };
+            }
+            if (type === "faq") {
+                return {
+                    type,
+                    enabled: true,
+                    title: "Common Questions",
+                    items: [
+                        { question: "Do you offer 24/7 emergency service?", answer: "" },
+                        { question: "How often should I service my HVAC system?", answer: "" },
+                        { question: "Are your technicians licensed and insured?", answer: "" },
+                        { question: "Do you offer financing for new installations?", answer: "" }
+                    ]
+                };
+            }
+            return { type: "features", enabled: true, title: "", items: [] };
+        }
+
+        function refreshBodyPreview() {
+            const body = bodySettingsFromForm().template1;
+            bodyPreview.innerHTML = generateBodyHtml(body, activeBodyPageIndex, false);
+            if (!body.enabled) {
+                bodyPreview.replaceChildren();
+                bodyPreview.textContent = "Генерацію блоків body вимкнено.";
+            } else if (!body.pages[activeBodyPageIndex].sections.some((section) => section.enabled)) {
+                bodyPreview.replaceChildren();
+                bodyPreview.textContent = "Додайте та налаштуйте блоки сторінки.";
+            }
+        }
+
+        function render(settings) {
+            const header = settings.header;
+            const background = header.blackTheme ? "#111111" : header.background;
+            const textColor = header.blackTheme ? "#ffffff" : header.textColor;
+            preview.replaceChildren();
+            preview.classList.toggle("is-air", header.air);
+            preview.style.backgroundColor = background;
+            preview.style.color = textColor;
+            preview.style.borderColor = header.air ? "transparent" : "#e1e5ef";
+            if (header.logoType === "text" && header.logoText) {
+                const text = document.createElement("a");
+                text.className = "preview-text-logo";
+                text.href = "/";
+                text.textContent = header.logoText;
+                text.style.color = textColor;
+                preview.appendChild(text);
+            } else if (header.logo) {
+                const image = document.createElement("img");
+                image.src = header.logo;
+                image.alt = "Логотип";
+                preview.appendChild(image);
+            }
+            const nav = document.createElement("nav");
+            nav.setAttribute("aria-label", "Основна навігація");
+            header.links.forEach((link) => {
+                const anchor = document.createElement("a");
+                anchor.href = link.url;
+                anchor.textContent = link.label;
+                anchor.style.color = textColor;
+                nav.appendChild(anchor);
+            });
+            const phoneMarkupPreview = () => {
+                const phone = document.createElement("a");
+                phone.className = "preview-phone";
+                phone.href = `tel:${header.telephone.replace(/[^\d+]/g, "")}`;
+                phone.textContent = header.telephone;
+                phone.style.color = textColor;
+                return phone;
+            };
+            if (header.telephoneEnabled && header.telephonePosition !== "after") {
+                preview.appendChild(phoneMarkupPreview());
+            }
+            preview.appendChild(nav);
+            if (header.telephoneEnabled && header.telephonePosition === "after") {
+                preview.appendChild(phoneMarkupPreview());
+            }
+            const modes = [];
+            if (header.air) modes.push("Air: прозора шапка поверх наступного блоку");
+            if (header.fixed) modes.push("Fixed: закріплена зверху");
+            if (!modes.length) modes.push("Звичайний режим");
+            previewMode.textContent = `Попередній перегляд: ${modes.join(" · ")}${header.telephoneEnabled ? ` · телефон ${header.telephonePosition === "after" ? "після" : "перед"} меню` : ""}`;
+            settingsJson.value = JSON.stringify(settings, null, 2);
+            const logoMarkup = header.logoType === "text"
+                ? (header.logoText
+                    ? `  <a class="generated-header__logo generated-header__logo--text" href="/" aria-label="На головну">${escapeHtml(header.logoText)}</a>\n`
+                    : "")
+                : (header.logo
+                    ? `  <a class="generated-header__logo" href="/" aria-label="На головну">\n    <img src="${escapeHtml(header.logo)}" alt="Логотип">\n  </a>\n`
+                    : "");
+            const phoneMarkup = header.telephoneEnabled
+                ? `  <a class="generated-header__phone" href="tel:${escapeHtml(header.telephone.replace(/[^\d+]/g, ""))}">${escapeHtml(header.telephone)}</a>\n`
+                : "";
+            const position = header.fixed ? "fixed" : header.air ? "absolute" : "relative";
+            const generatedBackground = header.air ? "transparent" : background;
+            const linkMarkup = header.links.map((link) =>
+                `    <a href="${escapeHtml(link.url)}">${escapeHtml(link.label)}</a>`
+            ).join("\n");
+            const headerMarkup = `<style>
+.generated-header {
+  box-sizing: border-box;
+  position: ${position};
+  ${header.air || header.fixed ? "top: 0; left: 0; right: 0;" : ""}
+  z-index: 1000;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  padding: 16px 24px;
+  background: ${generatedBackground};
+  color: ${textColor};
+}
+.generated-header__logo img { display: block; max-width: 150px; max-height: 44px; width: auto; object-fit: contain; }
+.generated-header__logo--text { color: inherit; font-size: 1.25rem; font-weight: 800; text-decoration: none; }
+.generated-header__phone, .generated-header__nav a { color: inherit; text-decoration: none; }
+.generated-header__nav { display: flex; flex-wrap: wrap; gap: 18px; }
+@media (max-width: 640px) {
+  .generated-header { flex-direction: column; align-items: flex-start; gap: 12px; padding: 14px 16px; }
+  .generated-header__nav { width: 100%; gap: 12px 16px; }
+}
+</style>
+<header class="generated-header">
+${logoMarkup}${header.telephoneEnabled && header.telephonePosition !== "after" ? phoneMarkup : ""}  <nav class="generated-header__nav" aria-label="Основна навігація">
+${linkMarkup}
+  </nav>
+${header.telephoneEnabled && header.telephonePosition === "after" ? phoneMarkup : ""}
+</header>`;
+  const bodyMarkup = renderBody(settings);
+  const pageTitle = settings.body.template1.pages[0]?.name || "Сайт";
+  const seo = settings.seo;
+  const geo = seo.geo;
+  const seoTitle = seo.title || pageTitle;
+  const seoDescription = seo.description ? `\n  <meta name="description" content="${escapeHtml(seo.description)}">` : "";
+  const seoKeywords = seo.keywords ? `\n  <meta name="keywords" content="${escapeHtml(seo.keywords)}">` : "";
+  const seoRobots = seo.robots ? `\n  <meta name="robots" content="${escapeHtml(seo.robots)}">` : "";
+  const canonical = seo.canonical ? `\n  <link rel="canonical" href="${escapeHtml(seo.canonical)}">` : "";
+  const ogTitle = seo.ogTitle || seoTitle;
+  const ogDescription = seo.ogDescription || seo.description;
+  const ogImage = seo.ogImage ? `\n  <meta property="og:image" content="${escapeHtml(seo.ogImage)}">` : "";
+  const openGraph = `\n  <meta property="og:title" content="${escapeHtml(ogTitle)}">${ogDescription ? `\n  <meta property="og:description" content="${escapeHtml(ogDescription)}">` : ""}${ogImage}`;
+  const geoRegion = geo.region ? `\n  <meta name="geo.region" content="${escapeHtml(geo.region)}">` : "";
+  const geoPlacename = geo.placename ? `\n  <meta name="geo.placename" content="${escapeHtml(geo.placename)}">` : "";
+  const geoPosition = geo.position ? `\n  <meta name="geo.position" content="${escapeHtml(geo.position)}">\n  <meta name="ICBM" content="${escapeHtml(geo.position.replace(";", ", "))}">` : "";
+  const language = geo.language || "uk";
+  generatedSiteHtml.value = `<!doctype html>
+<html lang="${escapeHtml(language)}">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>${escapeHtml(seoTitle)}</title>${seoDescription}${seoKeywords}${seoRobots}${canonical}${openGraph}${geoRegion}${geoPlacename}${geoPosition}
+  <style>
+    *, *::before, *::after { box-sizing: border-box; }
+    html, body { min-height: 100%; margin: 0; }
+    body { font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
+  </style>
+</head>
+<body>
+${headerMarkup}
+${bodyMarkup}
+</body>
+</html>`;
+        }
+
+        function generateBodyHtml(body, onlyPageIndex = null, includePageSwitcher = true) {
+  if (!body.enabled) return "";
+  const pages = onlyPageIndex === null ? body.pages : body.pages.slice(onlyPageIndex, onlyPageIndex + 1);
+  if (!pages.length) return "";
+
+  const markup = pages.map((page, renderIndex) => {
+      const sections = page.sections.filter((section) => section.enabled);
+      const sectionMarkup = sections.map((section) => {
+      if (section.type === "hero") {
+          const image = section.backgroundImage
+              ? `\n  <img class="generated-body__hero-image" src="${escapeHtml(section.backgroundImage)}" alt="" loading="lazy">`
+              : "";
+          const button = section.buttonLabel && section.buttonUrl
+              ? `\n    <a class="generated-body__button" href="${escapeHtml(section.buttonUrl)}">${escapeHtml(section.buttonLabel)}</a>`
+              : "";
+          const eyebrow = section.eyebrow
+              ? `\n    <p class="generated-body__eyebrow">${escapeHtml(section.eyebrow)}</p>`
+              : "";
+          const subtitle = section.subtitle
+              ? `\n    <p class="generated-body__description">${escapeHtml(section.subtitle)}</p>`
+              : "";
+          return `<section class="generated-body__hero" style="background-color:${body.background};color:${body.textColor};">${image}
+  <div class="generated-body__hero-overlay"></div>
+  <div class="generated-body__hero-content">${eyebrow}
+    <h1>${escapeHtml(section.title)}</h1>${subtitle}${button}
+  </div>
+</section>`;
+      }
+      if (section.type === "about") {
+          const images = section.images.map((image, index) =>
+              `    <img src="${escapeHtml(image)}" alt="" loading="lazy"${index === 0 ? ' class="generated-body__about-main-image"' : ""}>`
+          ).join("\n");
+          const bullets = section.items.map((item) =>
+              `      <li>${escapeHtml(item)}</li>`
+          ).join("\n");
+          const button = section.buttonLabel && section.buttonUrl
+              ? `\n    <a class="generated-body__button" href="${escapeHtml(section.buttonUrl)}">${escapeHtml(section.buttonLabel)}</a>`
+              : "";
+          const eyebrow = section.eyebrow
+              ? `\n    <p class="generated-body__eyebrow">${escapeHtml(section.eyebrow)}</p>`
+              : "";
+          const text = section.text
+              ? `\n    <p class="generated-body__description">${escapeHtml(section.text)}</p>`
+              : "";
+          const imageMarkup = images
+              ? `\n  <div class="generated-body__about-images">\n${images}\n  </div>`
+              : "";
+          const list = bullets
+              ? `\n    <ul class="generated-body__checklist">\n${bullets}\n    </ul>`
+              : "";
+          return `<section class="generated-body__about" id="about" style="background-color:${body.background};color:${body.textColor};">${imageMarkup}
+  <div class="generated-body__about-content">${eyebrow}
+    <h2>${escapeHtml(section.title)}</h2>${text}${list}${button}
+  </div>
+</section>`;
+      }
+      if (section.type === "contact") {
+          const details = [
+              section.phone
+                  ? `<a class="generated-body__contact-card" href="tel:${escapeHtml(section.phone.replace(/[^\d+]/g, ""))}"><span>Телефон</span><strong>${escapeHtml(section.phone)}</strong></a>`
+                  : "",
+              section.email
+                  ? `<a class="generated-body__contact-card" href="mailto:${escapeHtml(section.email)}"><span>Email</span><strong>${escapeHtml(section.email)}</strong></a>`
+                  : "",
+              section.address
+                  ? `<div class="generated-body__contact-card"><span>Адреса</span><strong>${escapeHtml(section.address)}</strong></div>`
+                  : "",
+              section.hours
+                  ? `<div class="generated-body__contact-card"><span>Графік роботи</span><strong>${escapeHtml(section.hours)}</strong></div>`
+                  : ""
+          ].filter(Boolean).join("\n");
+          const intro = section.intro
+              ? `\n    <p class="generated-body__description">${escapeHtml(section.intro)}</p>`
+              : "";
+          return `<section class="generated-body__contact" id="contact" style="background-color:${body.background};color:${body.textColor};">
+  <div class="generated-body__contact-inner">
+    <p class="generated-body__eyebrow">Contact</p>
+    <h2>${escapeHtml(section.title)}</h2>${intro}
+    ${details ? `<div class="generated-body__contact-grid">${details}</div>` : ""}
+  </div>
+</section>`;
+      }
+      if (section.type === "faq") {
+          const items = section.items.map((item) => `<details class="generated-body__faq-item">
+  <summary>${escapeHtml(item.question)}<span aria-hidden="true"></span></summary>
+  ${item.answer ? `<p>${escapeHtml(item.answer)}</p>` : ""}
+</details>`).join("\n");
+          return `<section class="generated-body__faq" style="background-color:${body.background};color:${body.textColor};">
+  <h2>${escapeHtml(section.title)}</h2>
+  <div class="generated-body__faq-list">
+${items}
+  </div>
+</section>`;
+      }
+      const items = section.items.map((item) => {
+          const icon = item.icon
+              ? `\n      <img src="${escapeHtml(item.icon)}" alt="" loading="lazy">`
+              : "";
+          return `    <article class="generated-body__feature">${icon}
+      <h3>${escapeHtml(item.title)}</h3>
+      <p>${escapeHtml(item.description)}</p>
+    </article>`;
+      }).join("\n");
+      return `<section class="generated-body__features" style="background-color:${body.background};color:${body.textColor};">
+  <h2>${escapeHtml(section.title)}</h2>
+  <div class="generated-body__feature-grid">\n${items}\n  </div>
+</section>`;
+      }).join("\n\n");
+      const pageHidden = onlyPageIndex === null && renderIndex > 0 ? " hidden" : "";
+      return `<main class="generated-body__page" id="${escapeHtml(page.slug)}" data-generated-page="${escapeHtml(page.slug)}"${pageHidden}>
+${sectionMarkup}
+</main>`;
+  }).join("\n");
+  const pageSwitcher = includePageSwitcher && onlyPageIndex === null && body.pages.length > 1
+      ? `<label class="generated-body__page-switcher">Сторінка
+  <select data-generated-page-switcher aria-label="Вибрати сторінку">
+${body.pages.map((page) => `    <option value="${escapeHtml(page.slug)}">${escapeHtml(page.name)}</option>`).join("\n")}
+  </select>
+</label>`
+      : "";
+  const pageScript = pageSwitcher
+      ? `<script>
+document.querySelector("[data-generated-page-switcher]").addEventListener("change", (event) => {
+  showGeneratedPage(event.target.value);
+  history.replaceState(null, "", "#" + event.target.value);
+});
+const generatedPages = [...document.querySelectorAll("[data-generated-page]")];
+function showGeneratedPage(slug) {
+  const selectedPage = generatedPages.find((page) => page.dataset.generatedPage === slug);
+  if (!selectedPage) return false;
+  document.querySelector("[data-generated-page-switcher]").value = slug;
+  generatedPages.forEach((page) => { page.hidden = page !== selectedPage; });
+  return true;
+}
+window.addEventListener("hashchange", () => {
+  showGeneratedPage(decodeURIComponent(location.hash.slice(1)));
+});
+if (!showGeneratedPage(decodeURIComponent(location.hash.slice(1)))) {
+  showGeneratedPage(generatedPages[0].dataset.generatedPage);
+}
+<\/script>`
+      : "";
+
+  return `<style>
+.generated-body, .generated-body * { box-sizing: border-box; }
+.generated-body { width: 100%; font-family: inherit; }
+.generated-body__page[hidden] { display: none; }
+.generated-body__page-switcher { display: flex; align-items: center; gap: 10px; padding: 14px 24px; background: #f3f5fa; color: #202334; font-weight: 600; }
+.generated-body__page-switcher select { min-width: 180px; padding: 9px 12px; border: 1px solid #cbd1df; border-radius: 7px; color: inherit; background: #fff; font: inherit; }
+.generated-body__hero { position: relative; display: flex; align-items: center; min-height: 420px; overflow: hidden; padding: clamp(32px, 8vw, 100px); }
+.generated-body__hero-image, .generated-body__hero-overlay { position: absolute; inset: 0; width: 100%; height: 100%; }
+.generated-body__hero-image { object-fit: cover; }
+.generated-body__hero-overlay { background: linear-gradient(90deg, rgba(0,0,0,.58), rgba(0,0,0,.18)); }
+.generated-body__hero-content { position: relative; z-index: 1; width: min(100%, 560px); margin-inline: auto; }
+.generated-body__hero h1, .generated-body__about h2, .generated-body__contact h2, .generated-body__features h2 { margin: 0 0 16px; font-size: clamp(1.8rem, 3.5vw, 3rem); line-height: 1.12; }
+.generated-body__eyebrow { margin: 0 0 12px; font-size: .75rem; font-weight: 800; letter-spacing: .14em; text-transform: uppercase; }
+.generated-body__description { margin: 0 0 24px; max-width: 620px; line-height: 1.65; }
+.generated-body__button { display: inline-flex; align-items: center; justify-content: center; min-height: 44px; padding: 11px 22px; border-radius: 999px; background: #28578f; color: #fff; font-size: .8rem; font-weight: 800; text-decoration: none; text-transform: uppercase; }
+.generated-body__hero .generated-body__button { background: #fff; color: #142238; }
+.generated-body__about { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); align-items: center; gap: clamp(28px, 6vw, 76px); padding: clamp(32px, 7vw, 88px); }
+.generated-body__about-images { display: grid; grid-template-columns: 1fr 1fr; grid-template-rows: 1fr 1fr; gap: 14px; align-items: center; }
+.generated-body__about-images img { display: block; width: 100%; height: clamp(120px, 16vw, 210px); object-fit: cover; border-radius: 12px; }
+.generated-body__about-main-image { grid-row: span 2; height: clamp(220px, 26vw, 340px) !important; }
+.generated-body__about-images img:only-child { grid-column: 1 / -1; grid-row: 1 / -1; height: clamp(220px, 30vw, 380px); }
+.generated-body__about-content { max-width: 600px; }
+.generated-body__contact { padding: clamp(32px, 7vw, 88px); }
+.generated-body__contact-inner { max-width: 1120px; margin: 0 auto; }
+.generated-body__contact-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 220px), 1fr)); gap: 14px; margin-top: 28px; }
+.generated-body__contact-card { display: grid; gap: 9px; min-height: 104px; padding: 20px; border: 1px solid rgba(20,34,56,.12); border-radius: 12px; background: rgba(255,255,255,.78); color: inherit; text-decoration: none; overflow-wrap: anywhere; }
+.generated-body__contact-card span { color: #657087; font-size: .78rem; font-weight: 750; letter-spacing: .08em; text-transform: uppercase; }
+.generated-body__contact-card strong { font-size: 1rem; line-height: 1.5; }
+.generated-body__checklist { display: grid; gap: 12px; margin: 24px 0; padding: 0; list-style: none; }
+.generated-body__checklist li { line-height: 1.5; }
+.generated-body__checklist li::before { content: "✓"; margin-right: 9px; font-weight: 800; }
+.generated-body__faq { max-width: 100%; padding: clamp(32px, 5vw, 64px) clamp(20px, 12vw, 280px); background: #fff !important; color: #111827 !important; }
+.generated-body__faq h2 { max-width: 760px; margin: 0 auto 24px; font-size: clamp(1.8rem, 3vw, 2.8rem); line-height: 1.1; text-align: center; }
+.generated-body__faq-list { max-width: 760px; margin: 0 auto; display: grid; gap: 12px; }
+.generated-body__faq-item { overflow: hidden; border: 1px solid #dfe3ea; border-radius: 8px; background: #fff; }
+.generated-body__faq-item summary { display: flex; align-items: center; justify-content: space-between; gap: 16px; min-height: 68px; padding: 18px 20px; cursor: pointer; list-style: none; font-weight: 750; }
+.generated-body__faq-item summary::-webkit-details-marker { display: none; }
+.generated-body__faq-item summary span { position: relative; flex: 0 0 20px; width: 20px; height: 20px; border-radius: 50%; background: #edf2ff; }
+.generated-body__faq-item summary span::before, .generated-body__faq-item summary span::after { content: ""; position: absolute; top: 9px; left: 6px; width: 8px; height: 2px; background: #28578f; }
+.generated-body__faq-item summary span::after { transform: rotate(90deg); transition: transform .2s ease; }
+.generated-body__faq-item[open] summary span::after { transform: rotate(0); }
+.generated-body__faq-item p { margin: 0; padding: 0 20px 18px; color: #657087; line-height: 1.65; }
+.generated-body__features { padding: clamp(32px, 7vw, 88px); }
+.generated-body__feature-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 20px; }
+.generated-body__feature { padding: 22px; border-radius: 12px; background: rgba(255,255,255,.72); }
+.generated-body__feature img { width: 42px; height: 42px; object-fit: contain; }
+.generated-body__feature h3 { margin: 12px 0 8px; }
+.generated-body__feature p { margin: 0; line-height: 1.55; }
+@media (max-width: 700px) {
+  .generated-body__hero { min-height: 340px; }
+  .generated-body__about { grid-template-columns: 1fr; }
+  .generated-body__about-images { max-width: 520px; }
+  .generated-body__faq { padding: 32px 16px; }
+  .generated-body__faq-item summary { min-height: 58px; padding: 14px 16px; }
+}
+</style>
+<div class="generated-body">
+${pageSwitcher}
+${markup}
+</div>
+${pageScript}`;
+        }
+
+        function renderBody(settings) {
+            const body = settings.body.template1;
+            const bodyMarkup = generateBodyHtml(body);
+            bodyPreview.innerHTML = generateBodyHtml(body, activeBodyPageIndex, false);
+            if (!body.enabled) {
+                bodyPreview.replaceChildren();
+                bodyPreview.textContent = "Генерацію блоків body вимкнено.";
+            } else if (!body.pages[activeBodyPageIndex]?.sections.some((section) => section.enabled)) {
+                bodyPreview.replaceChildren();
+                bodyPreview.textContent = "Додайте та налаштуйте блоки сторінки.";
+            }
+            return bodyMarkup;
+        }
+
+        function setStatus(message, isError = false) {
+            status.textContent = message;
+            status.classList.toggle("error", isError);
+        }
+
+        function encodeCookieValue(value) {
+            const bytes = new TextEncoder().encode(value);
+            let binary = "";
+            bytes.forEach((byte) => { binary += String.fromCharCode(byte); });
+            const encoded = btoa(binary).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/g, "");
+            return `b64.${encoded}`;
+        }
+
+        function decodeCookieValue(value) {
+            if (!value.startsWith("b64.")) {
+                try {
+                    return decodeURIComponent(value);
+                } catch {
+                    return value;
+                }
+            }
+            try {
+                const base64 = value.slice(4).replace(/-/g, "+").replace(/_/g, "/");
+                const padded = base64.padEnd(Math.ceil(base64.length / 4) * 4, "=");
+                const binary = atob(padded);
+                const bytes = Uint8Array.from(binary, (character) => character.charCodeAt(0));
+                return new TextDecoder().decode(bytes);
+            } catch {
+                return value;
+            }
+        }
+
+        function getCookie(name) {
+            const prefix = `${name}=`;
+            const item = document.cookie.split("; ").find((cookie) => cookie.startsWith(prefix));
+            return item ? decodeCookieValue(item.slice(prefix.length)) : null;
+        }
+
+        async function initialize() {
+            let settings;
+            const saved = getCookie(COOKIE_NAME);
+            if (saved) {
+                try {
+                    settings = readSettings(JSON.parse(saved));
+                } catch (error) {
+                    setStatus(`Не вдалося прочитати збережені налаштування: ${error.message}`, true);
+                }
+            }
+            if (!settings) {
+                try {
+                    const response = await fetch("./setting.json", { cache: "no-store" });
+                    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+                    settings = readSettings(await response.json());
+                } catch (error) {
+                    settings = DEFAULT_SETTINGS;
+                    setStatus(`Не вдалося завантажити setting.json (${error.message}); використано вбудовані налаштування.`, true);
+                }
+            }
+            updateForm(settings);
+            render(settingsFromForm());
+        }
+
+        form.addEventListener("submit", (event) => {
+            event.preventDefault();
+            try {
+                const settings = settingsFromForm();
+                const json = JSON.stringify(settings);
+                const cookieValue = encodeCookieValue(json);
+                if (new TextEncoder().encode(`${COOKIE_NAME}=${cookieValue}`).length > COOKIE_MAX_BYTES) {
+                    throw new Error("Налаштування завеликі для cookie. Скоротіть кількість або довжину посилань.");
+                }
+                const secure = location.protocol === "https:" ? "; Secure" : "";
+                document.cookie = `${COOKIE_NAME}=${cookieValue}; Path=/; Max-Age=2592000; SameSite=Lax${secure}`;
+                const saved = getCookie(COOKIE_NAME);
+                if (saved !== json) throw new Error("Браузер не зберіг cookie. Перевірте налаштування cookie для цієї сторінки.");
+                render(readSettings(JSON.parse(saved)));
+                setStatus("Налаштування збережені в cookie setting, header і body згенеровано.");
+            } catch (error) {
+                setStatus(error.message, true);
+            }
+        });
+
+        document.getElementById("addBodySection").addEventListener("click", () => {
+            if (document.getElementById("bodyPageEditor").hidden) {
+                renderBodyPageEditor(activeBodyPageIndex);
+            }
+            saveActiveBodyPage();
+            bodyPages[activeBodyPageIndex].sections.push(
+                emptyBodySection(document.getElementById("newBodySection").value)
+            );
+            renderBodyPageEditor();
+            refreshBodyPreview();
+        });
+        document.getElementById("addBodyPage").addEventListener("click", () => {
+            saveActiveBodyPage();
+            let pageNumber = bodyPages.length + 1;
+            while (bodyPages.some((page) => page.slug === `page-${pageNumber}`)) pageNumber += 1;
+            const page = {
+                name: `Нова сторінка ${pageNumber}`,
+                slug: `page-${pageNumber}`,
+                sections: []
+            };
+            bodyPages.push(page);
+            addLinkRow({ label: page.name, url: `#${page.slug}` }, page.slug);
+            activeBodyPageIndex = bodyPages.length - 1;
+            renderBodyPageEditor(-1);
+            refreshBodyPreview();
+        });
+        document.getElementById("bodyPageName").addEventListener("input", (event) => {
+            const pageCard = document.getElementById("bodyPageList").children[activeBodyPageIndex];
+            const title = pageCard?.querySelector(".body-page-title");
+            const toggle = pageCard?.querySelector(".body-page-toggle");
+            if (title && toggle) {
+                title.textContent = event.target.value.trim() || `Сторінка ${activeBodyPageIndex + 1}`;
+                toggle.setAttribute("aria-label", `Згорнути сторінку ${title.textContent}`);
+            }
+        });
+        form.elements.telephoneEnabled.addEventListener("change", (event) => {
+            form.elements.telephone.disabled = !event.target.checked;
+            document.getElementById("telephoneField").hidden = !event.target.checked;
+        });
+        form.elements.logoType.addEventListener("change", (event) => {
+            const isText = event.target.value === "text";
+            document.getElementById("logoImageField").hidden = isText;
+            document.getElementById("logoTextField").hidden = !isText;
+            render(settingsFromForm());
+        });
+        form.elements.logoText.addEventListener("input", () => render(settingsFromForm()));
+        form.elements.logo.addEventListener("input", () => render(settingsFromForm()));
+        form.elements.telephonePosition.addEventListener("change", () => render(settingsFromForm()));
+        document.getElementById("copySiteHtml").addEventListener("click", async () => {
+            try {
+                await navigator.clipboard.writeText(generatedSiteHtml.value);
+                setStatus("HTML сайту скопійовано.");
+            } catch (error) {
+                setStatus(`Не вдалося скопіювати HTML сайту: ${error.message}`, true);
+            }
+        });
+        document.getElementById("downloadSiteHtml").addEventListener("click", () => {
+            const blob = new Blob([generatedSiteHtml.value], { type: "text/html;charset=utf-8" });
+            const url = URL.createObjectURL(blob);
+            const anchor = document.createElement("a");
+            anchor.href = url;
+            anchor.download = "site.html";
+            anchor.click();
+            URL.revokeObjectURL(url);
+            setStatus("Файл site.html завантажено.");
+        });
+        document.getElementById("downloadSettingsJson").addEventListener("click", () => {
+            try {
+                const settings = settingsFromForm();
+                const json = JSON.stringify(settings, null, 2);
+                const blob = new Blob([json], { type: "application/json;charset=utf-8" });
+                const url = URL.createObjectURL(blob);
+                const anchor = document.createElement("a");
+                anchor.href = url;
+                anchor.download = "setting.json";
+                anchor.click();
+                URL.revokeObjectURL(url);
+                settingsJson.value = json;
+                setStatus("Файл setting.json завантажено.");
+            } catch (error) {
+                setStatus(error.message, true);
+            }
+        });
+        document.getElementById("uploadSettingsJson").addEventListener("click", () => {
+            document.getElementById("settingsJsonFile").click();
+        });
+        document.getElementById("settingsJsonFile").addEventListener("change", async (event) => {
+            const file = event.target.files?.[0];
+            if (!file) return;
+            try {
+                const parsed = JSON.parse(await file.text());
+                const settings = readSettings(parsed);
+                updateForm(settings);
+                render(settings);
+                setStatus(`Налаштування завантажено з ${file.name}.`);
+            } catch (error) {
+                setStatus(`Не вдалося завантажити налаштування: ${error.message}`, true);
+            } finally {
+                event.target.value = "";
+            }
+        });
+
+        initialize();
+    </script>
+    
+
+<script>
+  document.addEventListener("DOMContentLoaded", function () {
+    const STORAGE_KEY = "site_builder_storage_consent";
+    const banner = document.getElementById("cookie-banner");
+    const acceptBtn = document.getElementById("cookie-accept");
+    const declineBtn = document.getElementById("cookie-decline");
+
+    if (!localStorage.getItem(STORAGE_KEY)) {
+      banner.style.display = "block";
+    }
+
+    function handleConsent(level) {
+      localStorage.setItem(STORAGE_KEY, level);
+      banner.style.display = "none";
+
+      if (level === "all") {
+        // Місце для ініціалізації аналітики (наприклад, Google Analytics / Plausible)
+        console.log("Увімкнено локальне збереження + аналітику");
+      } else {
+        // Працює лише локальне збереження налаштувань генератора
+         console.log("Увімкнено лише локальне збереження налаштувань");
+      }
+    }
+
+    acceptBtn.addEventListener("click", () => handleConsent("all"));
+    declineBtn.addEventListener("click", () => handleConsent("local_only"));
+  });
+</script>
+    
+</body>
+</html>
