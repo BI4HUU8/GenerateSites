@@ -99,5 +99,21 @@
         }
       ]
     }
+  },
+  "seo": {
+    "title": "",
+    "description": "",
+    "keywords": "",
+    "canonical": "",
+    "robots": "index, follow",
+    "ogTitle": "",
+    "ogDescription": "",
+    "ogImage": "",
+    "geo": {
+      "region": "",
+      "placename": "",
+      "position": "",
+      "language": "uk"
+    }
   }
 }

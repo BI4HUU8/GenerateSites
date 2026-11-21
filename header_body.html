@@ -166,10 +166,14 @@
         .status { min-height: 1.5em; margin: 12px 0 0; color: #3a526f; font-size: .92rem; }
         .status.error { color: #a12636; }
         .hint { margin: -8px 0 16px; color: #657087; font-size: .85rem; }
+        .seo-fields { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
+        .seo-fields .field { margin-bottom: 16px; }
+        .seo-fields textarea { min-height: 86px; }
         @media (max-width: 760px) {
             body { padding: 20px 12px 36px; }
             .layout { grid-template-columns: 1fr; }
             .panel, .intro { padding: 18px; }
+            .seo-fields { grid-template-columns: 1fr; }
             .link-row { grid-template-columns: 1fr auto auto; }
             .link-url { grid-column: 1; }
             .edit-link, .remove-link { grid-column: 2; grid-row: 1 / span 2; }
@@ -252,6 +256,49 @@
                     </div>
                     <p id="status" class="status" role="status" aria-live="polite"></p>
                 </form>
+            </section>
+
+            <section class="panel" aria-labelledby="seo-settings-title">
+                <h2 id="seo-settings-title">Налаштування SEO GEO</h2>
+                <p class="hint">Метадані та геолокація будуть додані в <code>&lt;head&gt;</code> згенерованого сайту.</p>
+                <div class="seo-fields">
+                    <label class="field" for="seoTitle">SEO заголовок
+                        <input id="seoTitle" type="text" placeholder="Назва сайту">
+                    </label>
+                    <label class="field" for="seoDescription">Meta description
+                        <textarea id="seoDescription" placeholder="Короткий опис сайту для пошукових систем"></textarea>
+                    </label>
+                    <label class="field" for="seoKeywords">Ключові слова
+                        <input id="seoKeywords" type="text" placeholder="послуга, місто, компанія">
+                    </label>
+                    <label class="field" for="seoCanonical">Canonical URL
+                        <input id="seoCanonical" type="url" placeholder="https://example.com/">
+                    </label>
+                    <label class="field" for="seoRobots">Robots
+                        <input id="seoRobots" type="text" placeholder="index, follow">
+                    </label>
+                    <label class="field" for="seoOgTitle">Open Graph заголовок
+                        <input id="seoOgTitle" type="text" placeholder="Назва для соцмереж">
+                    </label>
+                    <label class="field" for="seoOgDescription">Open Graph опис
+                        <textarea id="seoOgDescription" placeholder="Опис для соцмереж"></textarea>
+                    </label>
+                    <label class="field" for="seoOgImage">Open Graph зображення
+                        <input id="seoOgImage" type="url" placeholder="https://example.com/image.jpg">
+                    </label>
+                    <label class="field" for="geoRegion">GEO регіон
+                        <input id="geoRegion" type="text" placeholder="UA-30 або UA-KY">
+                    </label>
+                    <label class="field" for="geoPlacename">GEO населений пункт
+                        <input id="geoPlacename" type="text" placeholder="Київ">
+                    </label>
+                    <label class="field" for="geoPosition">GEO координати
+                        <input id="geoPosition" type="text" placeholder="50.4501;30.5234">
+                    </label>
+                    <label class="field" for="geoLanguage">Мова контенту
+                        <input id="geoLanguage" type="text" placeholder="uk">
+                    </label>
+                </div>
             </section>
 
 
@@ -370,6 +417,22 @@
                         { name: "Головна", slug: "home", sections: [] }
                     ]
                 }
+            },
+            seo: {
+                title: "",
+                description: "",
+                keywords: "",
+                canonical: "",
+                robots: "index, follow",
+                ogTitle: "",
+                ogDescription: "",
+                ogImage: "",
+                geo: {
+                    region: "",
+                    placename: "",
+                    position: "",
+                    language: "uk"
+                }
             }
         };
         const COOKIE_NAME = "setting";
@@ -428,6 +491,28 @@
                 }
                 return { label: link.label.trim(), url: safeUrl(link.url, `Посилання ${index + 1}`) };
             }).filter((link) => link.label && link.url);
+            const seoInput = value.seo && typeof value.seo === "object" ? value.seo : {};
+            const geoInput = seoInput.geo && typeof seoInput.geo === "object" ? seoInput.geo : {};
+            const seoText = (field, fallback = "") => {
+                const text = seoInput[field];
+                return String(text === undefined ? fallback : text).trim();
+            };
+            const seo = {
+                title: seoText("title"),
+                description: seoText("description"),
+                keywords: seoText("keywords"),
+                canonical: safeUrl(seoText("canonical"), "Canonical URL"),
+                robots: seoText("robots", "index, follow"),
+                ogTitle: seoText("ogTitle"),
+                ogDescription: seoText("ogDescription"),
+                ogImage: safeUrl(seoText("ogImage"), "Open Graph зображення"),
+                geo: {
+                    region: String(geoInput.region || "").trim(),
+                    placename: String(geoInput.placename || "").trim(),
+                    position: String(geoInput.position || "").trim(),
+                    language: String(geoInput.language || "uk").trim()
+                }
+            };
             const bodyConfig = value.body?.template1 || DEFAULT_SETTINGS.body.template1;
             if (!/^#[0-9a-f]{6}$/i.test(bodyConfig.background || "") ||
                 !/^#[0-9a-f]{6}$/i.test(bodyConfig.textColor || "")) {
@@ -571,7 +656,8 @@
                         textColor: bodyConfig.textColor,
                         pages
                     }
-                }
+                },
+                seo
             };
         }
 
@@ -971,7 +1057,23 @@
                     telephonePosition: data.get("telephonePosition"),
                     links
                 },
-                body: bodySettingsFromForm()
+                body: bodySettingsFromForm(),
+                seo: {
+                    title: document.getElementById("seoTitle").value,
+                    description: document.getElementById("seoDescription").value,
+                    keywords: document.getElementById("seoKeywords").value,
+                    canonical: document.getElementById("seoCanonical").value,
+                    robots: document.getElementById("seoRobots").value,
+                    ogTitle: document.getElementById("seoOgTitle").value,
+                    ogDescription: document.getElementById("seoOgDescription").value,
+                    ogImage: document.getElementById("seoOgImage").value,
+                    geo: {
+                        region: document.getElementById("geoRegion").value,
+                        placename: document.getElementById("geoPlacename").value,
+                        position: document.getElementById("geoPosition").value,
+                        language: document.getElementById("geoLanguage").value
+                    }
+                }
             });
         }
 
@@ -995,6 +1097,20 @@
             const body = settings.body.template1;
             document.getElementById("bodyBackground").value = body.background;
             document.getElementById("bodyTextColor").value = body.textColor;
+            const seo = settings.seo || DEFAULT_SETTINGS.seo;
+            document.getElementById("seoTitle").value = seo.title || "";
+            document.getElementById("seoDescription").value = seo.description || "";
+            document.getElementById("seoKeywords").value = seo.keywords || "";
+            document.getElementById("seoCanonical").value = seo.canonical || "";
+            document.getElementById("seoRobots").value = seo.robots || "index, follow";
+            document.getElementById("seoOgTitle").value = seo.ogTitle || "";
+            document.getElementById("seoOgDescription").value = seo.ogDescription || "";
+            document.getElementById("seoOgImage").value = seo.ogImage || "";
+            const geo = seo.geo || {};
+            document.getElementById("geoRegion").value = geo.region || "";
+            document.getElementById("geoPlacename").value = geo.placename || "";
+            document.getElementById("geoPosition").value = geo.position || "";
+            document.getElementById("geoLanguage").value = geo.language || "uk";
             bodyPages = body.pages.map((page) => ({
                 name: page.name,
                 slug: page.slug,
@@ -1165,12 +1281,27 @@ ${header.telephoneEnabled && header.telephonePosition === "after" ? phoneMarkup 
 </header>`;
   const bodyMarkup = renderBody(settings);
   const pageTitle = settings.body.template1.pages[0]?.name || "Сайт";
+  const seo = settings.seo;
+  const geo = seo.geo;
+  const seoTitle = seo.title || pageTitle;
+  const seoDescription = seo.description ? `\n  <meta name="description" content="${escapeHtml(seo.description)}">` : "";
+  const seoKeywords = seo.keywords ? `\n  <meta name="keywords" content="${escapeHtml(seo.keywords)}">` : "";
+  const seoRobots = seo.robots ? `\n  <meta name="robots" content="${escapeHtml(seo.robots)}">` : "";
+  const canonical = seo.canonical ? `\n  <link rel="canonical" href="${escapeHtml(seo.canonical)}">` : "";
+  const ogTitle = seo.ogTitle || seoTitle;
+  const ogDescription = seo.ogDescription || seo.description;
+  const ogImage = seo.ogImage ? `\n  <meta property="og:image" content="${escapeHtml(seo.ogImage)}">` : "";
+  const openGraph = `\n  <meta property="og:title" content="${escapeHtml(ogTitle)}">${ogDescription ? `\n  <meta property="og:description" content="${escapeHtml(ogDescription)}">` : ""}${ogImage}`;
+  const geoRegion = geo.region ? `\n  <meta name="geo.region" content="${escapeHtml(geo.region)}">` : "";
+  const geoPlacename = geo.placename ? `\n  <meta name="geo.placename" content="${escapeHtml(geo.placename)}">` : "";
+  const geoPosition = geo.position ? `\n  <meta name="geo.position" content="${escapeHtml(geo.position)}">\n  <meta name="ICBM" content="${escapeHtml(geo.position.replace(";", ", "))}">` : "";
+  const language = geo.language || "uk";
   generatedSiteHtml.value = `<!doctype html>
-<html lang="uk">
+<html lang="${escapeHtml(language)}">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>${escapeHtml(pageTitle)}</title>
+  <title>${escapeHtml(seoTitle)}</title>${seoDescription}${seoKeywords}${seoRobots}${canonical}${openGraph}${geoRegion}${geoPlacename}${geoPosition}
   <style>
     *, *::before, *::after { box-sizing: border-box; }
     html, body { min-height: 100%; margin: 0; }
