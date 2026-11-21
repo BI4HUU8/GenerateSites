@@ -1,0 +1,103 @@
+{
+  "header": {
+    "logoType": "image",
+    "logo": "/logo.png",
+    "logoText": "",
+    "background": "#ffffff",
+    "textColor": "#222222",
+    "air": false,
+    "fixed": false,
+    "blackTheme": false,
+    "telephoneEnabled": false,
+    "telephone": "",
+    "telephonePosition": "before",
+    "links": [
+      {
+        "label": "About",
+        "url": "#about"
+      },
+      {
+        "label": "Contact",
+        "url": "#contact"
+      }
+    ]
+  },
+  "body": {
+    "template1": {
+      "enabled": true,
+      "background": "#edf5f9",
+      "textColor": "#141228",
+      "pages": [
+        {
+          "name": "Главная",
+          "slug": "home",
+          "sections": [
+            {
+              "type": "hero",
+              "enabled": true,
+              "eyebrow": "",
+              "title": "Заголовок",
+              "subtitle": "Текст підзаголовка.",
+              "backgroundImage": "",
+              "buttonLabel": "",
+              "buttonUrl": ""
+            },
+            {
+              "type": "about",
+              "enabled": true,
+              "eyebrow": "Над заголовок",
+              "title": "Заголовок",
+              "text": "Текст підзаголовка.",
+              "images": [
+                "/images/1.jpg",
+                "/images/2.jpg",
+                "/images/3.jpg"
+              ],
+              "items": [
+                "Текст.",
+                "Текст.",
+                "Текст.",
+                "Текст."
+              ],
+              "buttonLabel": "Познакомьтесь с командой",
+              "buttonUrl": "/team"
+            },
+            {
+              "type": "contact",
+              "enabled": true,
+              "title": "Contact",
+              "intro": "Напишіть або зателефонуйте нам.",
+              "phone": "",
+              "email": "",
+              "address": "",
+              "hours": ""
+            },
+            {
+              "type": "faq",
+              "enabled": true,
+              "title": "Common Questions",
+              "items": [
+                {
+                  "question": "Do you offer 24/7 emergency service?",
+                  "answer": ""
+                },
+                {
+                  "question": "How often should I service my HVAC system?",
+                  "answer": ""
+                },
+                {
+                  "question": "Are your technicians licensed and insured?",
+                  "answer": ""
+                },
+                {
+                  "question": "Do you offer financing for new installations?",
+                  "answer": ""
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  }
+}
