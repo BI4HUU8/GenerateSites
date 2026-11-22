@@ -4,6 +4,8 @@
     "logo": "/logo.png",
     "logoText": "",
     "background": "#ffffff",
+    "backgroundOpacity": 100,
+    "backgroundBlur": 0,
     "textColor": "#222222",
     "air": false,
     "fixed": false,
@@ -26,7 +28,11 @@
     "template1": {
       "enabled": true,
       "background": "#edf5f9",
+      "blockBackground": "#ffffff",
+      "blockOpacity": 100,
+      "blockBlur": 0,
       "textColor": "#141228",
+      "textGray": "#657087",
       "pages": [
         {
           "name": "Главная",

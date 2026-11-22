@@ -41,7 +41,6 @@
             background: #fff;
         }
         input[type="color"] { width: 48px; height: 40px; padding: 3px; border: 1px solid #cbd1df; border-radius: 7px; background: #fff; }
-        .color-fields { display: flex; gap: 20px; flex-wrap: wrap; }
         .color-field { display: flex; align-items: center; gap: 9px; }
         .option-list { display: grid; gap: 10px; }
         .option {
@@ -176,6 +175,32 @@
         .seo-fields { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
         .seo-fields .field { margin-bottom: 16px; }
         .seo-fields textarea { min-height: 86px; }
+        .settings-details {
+            overflow: hidden;
+            border: 1px solid #dfe3ea;
+            border-radius: 9px;
+            background: #fbfcff;
+        }
+        .settings-details + .settings-details { margin-top: 12px; }
+        .settings-details summary {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            min-height: 52px;
+            padding: 14px 16px;
+            cursor: pointer;
+            list-style: none;
+            font-weight: 700;
+        }
+        .settings-details summary::-webkit-details-marker { display: none; }
+        .settings-details summary::after { content: "+"; font-size: 1.25rem; }
+        .settings-details[open] summary::after { content: "−"; }
+        .settings-details summary h2 { margin: 0; font-size: 1.15rem; }
+        .settings-details-content { display: grid; gap: 14px; padding: 0 16px 16px; }
+        .range-control { display: grid; gap: 7px; }
+        .range-control-header { display: flex; justify-content: space-between; align-items: center; gap: 12px; }
+        .range-control input[type="range"] { width: 100%; accent-color: #5146e5; }
         @media (max-width: 760px) {
             body { padding: 20px 12px 36px; }
             .layout { grid-template-columns: 1fr; }
@@ -248,18 +273,15 @@
     color: #ffffff;
   }
 
-  .cookie-btn.accept:hover {
-    background: #4f46e5;
-  }
+  .cookie-btn.accept:hover {background: #4f46e5;  }
 
   .cookie-btn.decline {
     background: #27272a;
     color: #d4d4d8;
   }
 
-  .cookie-btn.decline:hover {
-    background: #3f3f46;
-  }
+  .cookie-btn.decline:hover {background: #3f3f46;  }
+  .ma {margin: 0 auto;}
 
   @keyframes fadeInScale {
     from {
@@ -280,6 +302,7 @@
       max-width: none;
     }
   }
+
 </style>
 
 
@@ -291,9 +314,10 @@
 
     <main>
 
-            <section class="panel" aria-labelledby="seo-settings-title">
-                <h2 id="seo-settings-title">Налаштування SEO GEO</h2>
-                <div class="seo-fields">
+            <section class="panel">
+                <details class="settings-details">
+                    <summary><h2 id="seo-settings-title">Налаштування SEO GEO</h2></summary>
+                    <div class="settings-details-content seo-fields">
                     <label class="field" for="seoTitle">SEO заголовок
                         <input id="seoTitle" type="text" placeholder="Назва сайту">
                     </label>
@@ -330,12 +354,13 @@
                     <label class="field" for="geoLanguage">Мова контенту
                         <input id="geoLanguage" type="text" placeholder="uk">
                     </label>
-                </div>
+                    </div>
+                </details>
             </section>
 
 
             <section class="panel" aria-labelledby="settings-title">
-                <h2 id="settings-title">Налаштування</h2>
+                <h2 id="settings-title">Налаштування меню</h2>
                 <form id="settingsForm">
                     <div class="field">
                         <label for="logoType">Варіант логотипа</label>
@@ -352,19 +377,27 @@
                         <label for="logoText">Текст логотипа</label>
                         <input id="logoText" name="logoText" type="text" placeholder="Назва компанії">
                     </div>
-                    <fieldset class="field" style="border: 0; padding: 0; margin-left: 0;">
-                        <legend>Кольори</legend>
-                        <div class="color-fields">
-                            <label class="color-field" for="background">
-                                Фон <input id="background" name="background" type="color">
+                    <details class="settings-details">
+                        <summary>Налаштування кольорів</summary>
+                        <div class="settings-details-content">
+                                <label class="color-field" for="textColor">
+                                    Колір тексту <input id="textColor" name="textColor" type="color">
+                                </label>
+                            <label class="color-field" for="headerBackground">
+                                Фон меню <input id="headerBackground" name="headerBackground" type="color">
                             </label>
-                            <label class="color-field" for="textColor">
-                                Текст <input id="textColor" name="textColor" type="color">
+                            <label class="range-control" for="headerBackgroundOpacity">
+                                <span class="range-control-header"><span>Прозорість фону</span><output id="headerBackgroundOpacityValue">100%</output></span>
+                                <input id="headerBackgroundOpacity" name="headerBackgroundOpacity" type="range" min="0" max="100" value="100">
+                            </label>
+                            <label class="range-control" for="headerBackgroundBlur">
+                                <span class="range-control-header"><span>Розмиття фону</span><output id="headerBackgroundBlurValue">0px</output></span>
+                                <input id="headerBackgroundBlur" name="headerBackgroundBlur" type="range" min="0" max="30" value="0">
                             </label>
                         </div>
-                    </fieldset>
+                    </details>
                     <fieldset class="field" style="border: 0; padding: 0; margin-left: 0;">
-                        <legend>Настройки header</legend>
+                        <legend>Налаштування меню</legend>
                         <div class="option-list">
                             <label class="option">
                                 <input id="air" name="air" type="checkbox">
@@ -372,7 +405,7 @@
                             </label>
                             <label class="option">
                                 <input id="fixed" name="fixed" type="checkbox">
-                                <span>Fixed — закріпити шапку у верхній частині екрана.</span>
+                                <span>Fixed — закріпити шапку при прокручуванні.</span>
                             </label>
                             <label class="option">
                                 <input id="blackTheme" name="blackTheme" type="checkbox">
@@ -382,6 +415,8 @@
                                 <input id="telephoneEnabled" name="telephoneEnabled" type="checkbox">
                                 <span>Показувати телефон.</span>
                             </label>
+                        </div>
+                        <div class="settings-details-content" style="padding: 14px 0 0;">
                         </div>
                     </fieldset>
                     <div id="telephoneField" class="field" hidden>
@@ -417,14 +452,31 @@
 
             <section class="panel" aria-labelledby="body-settings-title">
                 <h2 id="body-settings-title">Блоки сайту</h2>
-                <div class="body-colors">
-                    <label class="field" for="bodyBackground">Фон сторінки за замовчуванням
-                        <input id="bodyBackground" type="color">
-                    </label>
-                    <label class="field" for="bodyTextColor">Колір тексту
-                        <input id="bodyTextColor" type="color">
-                    </label>
-                </div>
+                <details class="settings-details" open>
+                    <summary>Кольори</summary>
+                    <div class="settings-details-content body-colors">
+                        <label class="field" for="bodyBackground">Фон сайту
+                            <input id="bodyBackground" type="color">
+                        </label>
+                        <label class="field" for="bodyBlockBackground">Фон блоків
+                            <input id="bodyBlockBackground" type="color" value="#ffffff">
+                        </label>
+                        <label class="range-control" for="bodyBlockOpacity">
+                            <span class="range-control-header"><span>Прозорість фону блоків</span><output id="bodyBlockOpacityValue">100%</output></span>
+                            <input id="bodyBlockOpacity" type="range" min="0" max="100" value="100">
+                        </label>
+                        <label class="range-control" for="bodyBlockBlur">
+                            <span class="range-control-header"><span>Розмиття фону блоків</span><output id="bodyBlockBlurValue">0px</output></span>
+                            <input id="bodyBlockBlur" type="range" min="0" max="30" value="0">
+                        </label>
+                        <label class="field" for="bodyTextColor">Колір темного тексту
+                            <input id="bodyTextColor" type="color">
+                        </label>
+                        <label class="field" for="bodyTextGray">Колір світлого тексту
+                            <input id="bodyTextGray" type="color" value="#657087">
+                        </label>
+                    </div>
+                </details>
                 <div id="bodyPageList" class="body-page-list"></div>
                 <div id="bodyPageEditorParking" hidden>
                     <div id="bodyPageEditor" class="body-page-editor" hidden>
@@ -455,7 +507,7 @@
 
                 <section class="panel" >
                     <div class="actions body-block-add">
-                        <button id="addBodyPage" class="secondary" type="button">Додати сторінку</button>
+                        <button id="addBodyPage" class="secondary ma" type="button">Додати сторінку</button>
                     </div>
                 </section>
 
@@ -469,21 +521,21 @@
             <div id="bodyPreview" class="body-preview"></div>
             <div class="actions">
                 <button id="downloadSiteHtml" class="secondary" type="button">Скачати сайт index.html</button>
-                <button id="downloadSettingsJson" class="secondary" type="button">Скачати налаштування сай</button>
-                <a href="admin.html" download="admin.html"><button class="secondary" type="button">Скачати admin.html</button></a>
+                <button id="downloadSettingsJson" class="secondary ma" type="button">Скачати налаштування сай</button>
+                <a href="admin.html" download="admin.html"><button class="secondary ma" type="button">Скачати admin.html</button></a>
                 <input id="settingsJsonFile" type="file" accept=".json,application/json" hidden>
             </div>
         </section>
 
         <section class="panel" >
                 <div class="actions">
-                <button id="uploadSettingsJson" class="secondary" type="button">Завантажити налаштування сайту</button>
+                <button id="uploadSettingsJson" class="secondary ma" type="button">Завантажити налаштування сайту</button>
                 </div>
         </section>
 
         <section class="panel" >
                 <div class="actions">
-                    <button id="clearAutosave" class="secondary" type="button">Збросити налаштування сайту</button>
+                    <button id="clearAutosave" class="secondary ma" type="button">Збросити налаштування сайту</button>
                 </div>
         </section>
 
@@ -513,6 +565,8 @@
                 logo: "/logo.png",
                 logoText: "",
                 background: "#ffffff",
+                backgroundOpacity: 100,
+                backgroundBlur: 0,
                 textColor: "#222222",
                 air: false,
                 fixed: false,
@@ -529,7 +583,11 @@
                 template1: {
                     enabled: true,
                     background: "#edf5f9",
+                    blockBackground: "#ffffff",
+                    blockOpacity: 100,
+                    blockBlur: 0,
                     textColor: "#141228",
+                    textGray: "#657087",
                     pages: [
                         {
                             name: "Главная",
@@ -620,6 +678,19 @@
             })[character]);
         }
 
+        function hexToRgba(hex, opacity) {
+            const normalized = /^#[0-9a-f]{6}$/i.test(hex) ? hex : "#ffffff";
+            const red = parseInt(normalized.slice(1, 3), 16);
+            const green = parseInt(normalized.slice(3, 5), 16);
+            const blue = parseInt(normalized.slice(5, 7), 16);
+            return `rgba(${red}, ${green}, ${blue}, ${Math.max(0, Math.min(100, Number(opacity) || 0)) / 100})`;
+        }
+
+        function clampNumber(value, min, max, fallback) {
+            const number = Number(value);
+            return Number.isFinite(number) ? Math.max(min, Math.min(max, number)) : fallback;
+        }
+
         function safeUrl(value, fieldName) {
             const url = value.trim();
             if (!url) return "";
@@ -643,6 +714,11 @@
                 ? safeUrl(String(header.logo || ""), "URL логотипа")
                 : "";
             const logoText = String(header.logoText || "").trim();
+            const backgroundOpacity = clampNumber(header.backgroundOpacity, 0, 100, 100);
+            const backgroundBlur = clampNumber(header.backgroundBlur, 0, 30, 0);
+            const headerBackground = /^#[0-9a-f]{6}$/i.test(header.backgroundColor || "")
+                ? header.backgroundColor
+                : header.background;
             const telephoneEnabled = header.telephoneEnabled === true;
             const telephone = String(header.telephone || "").trim();
             const telephonePosition = header.telephonePosition === "after" ? "after" : "before";
@@ -683,6 +759,14 @@
                 !/^#[0-9a-f]{6}$/i.test(bodyConfig.textColor || "")) {
                 throw new Error("Кольори body мають бути в HEX-форматі #RRGGBB.");
             }
+            if (!/^#[0-9a-f]{6}$/i.test(bodyConfig.blockBackground || "#ffffff") ||
+                !/^#[0-9a-f]{6}$/i.test(bodyConfig.textGray || "#657087")) {
+                throw new Error("Кольори блоків і сірого тексту мають бути в HEX-форматі #RRGGBB.");
+            }
+            const blockBackground = bodyConfig.blockBackground || "#ffffff";
+            const blockOpacity = clampNumber(bodyConfig.blockOpacity, 0, 100, 100);
+            const blockBlur = clampNumber(bodyConfig.blockBlur, 0, 30, 0);
+            const textGray = bodyConfig.textGray || "#657087";
             const pageInputs = Array.isArray(bodyConfig.pages)
                 ? bodyConfig.pages
                 : Array.isArray(bodyConfig.sections)
@@ -804,7 +888,9 @@
                     logoType,
                     logo,
                     logoText,
-                    background: header.background,
+                    background: headerBackground,
+                    backgroundOpacity,
+                    backgroundBlur,
                     textColor: header.textColor,
                     air: header.air === true,
                     fixed: header.fixed === true,
@@ -818,7 +904,11 @@
                     template1: {
                         enabled: true,
                         background: bodyConfig.background,
+                        blockBackground,
+                        blockOpacity,
+                        blockBlur,
                         textColor: bodyConfig.textColor,
+                        textGray,
                         pages
                     }
                 },
@@ -989,7 +1079,7 @@
             enabledInput.type = "checkbox";
             enabledInput.dataset.enabled = "true";
             enabledInput.checked = sectionData.enabled !== false;
-            enabledLabel.append(enabledInput, document.createTextNode("Увімкнено"));
+            enabledLabel.append(enabledInput, document.createTextNode(""));
             const orderButtons = document.createElement("div");
             orderButtons.className = "section-order";
             const moveUpButton = document.createElement("button");
@@ -1246,7 +1336,11 @@
                 template1: {
                     enabled: true,
                     background: document.getElementById("bodyBackground").value,
+                    blockBackground: document.getElementById("bodyBlockBackground").value,
+                    blockOpacity: document.getElementById("bodyBlockOpacity").value,
+                    blockBlur: document.getElementById("bodyBlockBlur").value,
                     textColor: document.getElementById("bodyTextColor").value,
+                    textGray: document.getElementById("bodyTextGray").value,
                     pages: bodyPages.map((page) => ({
                         name: page.name,
                         slug: page.slug,
@@ -1267,7 +1361,9 @@
                     logoType: data.get("logoType"),
                     logo: data.get("logo"),
                     logoText: data.get("logoText"),
-                    background: data.get("background"),
+                background: document.getElementById("headerBackground").value,
+                backgroundOpacity: document.getElementById("headerBackgroundOpacity").value,
+                backgroundBlur: document.getElementById("headerBackgroundBlur").value,
                     textColor: data.get("textColor"),
                     air: data.get("air") === "on",
                     fixed: data.get("fixed") === "on",
@@ -1304,8 +1400,12 @@
             form.elements.logoText.value = header.logoText || "";
             document.getElementById("logoImageField").hidden = form.elements.logoType.value !== "image";
             document.getElementById("logoTextField").hidden = form.elements.logoType.value !== "text";
-            form.elements.background.value = header.background;
             form.elements.textColor.value = header.textColor;
+            document.getElementById("headerBackground").value = header.background;
+            document.getElementById("headerBackgroundOpacity").value = header.backgroundOpacity;
+            document.getElementById("headerBackgroundBlur").value = header.backgroundBlur;
+            document.getElementById("headerBackgroundOpacityValue").textContent = `${header.backgroundOpacity}%`;
+            document.getElementById("headerBackgroundBlurValue").textContent = `${header.backgroundBlur}px`;
             form.elements.air.checked = header.air === true;
             form.elements.fixed.checked = header.fixed === true;
             form.elements.blackTheme.checked = header.blackTheme === true;
@@ -1316,7 +1416,13 @@
             document.getElementById("telephoneField").hidden = !form.elements.telephoneEnabled.checked;
             const body = settings.body.template1;
             document.getElementById("bodyBackground").value = body.background;
+            document.getElementById("bodyBlockBackground").value = body.blockBackground;
+            document.getElementById("bodyBlockOpacity").value = body.blockOpacity;
+            document.getElementById("bodyBlockBlur").value = body.blockBlur;
+            document.getElementById("bodyBlockOpacityValue").textContent = `${body.blockOpacity}%`;
+            document.getElementById("bodyBlockBlurValue").textContent = `${body.blockBlur}px`;
             document.getElementById("bodyTextColor").value = body.textColor;
+            document.getElementById("bodyTextGray").value = body.textGray;
             const seo = settings.seo || DEFAULT_SETTINGS.seo;
             document.getElementById("seoTitle").value = seo.title || "";
             document.getElementById("seoDescription").value = seo.description || "";
@@ -1408,7 +1514,9 @@
             const textColor = header.blackTheme ? "#ffffff" : header.textColor;
             preview.replaceChildren();
             preview.classList.toggle("is-air", header.air);
-            preview.style.backgroundColor = background;
+            preview.style.background = hexToRgba(background, header.backgroundOpacity);
+            preview.style.backdropFilter = `blur(${header.backgroundBlur}px)`;
+            preview.style.webkitBackdropFilter = `blur(${header.backgroundBlur}px)`;
             preview.style.color = textColor;
             preview.style.borderColor = header.air ? "transparent" : "#e1e5ef";
             if (header.logoType === "text" && header.logoText) {
@@ -1464,7 +1572,7 @@
                 ? `  <a class="generated-header__phone" href="tel:${escapeHtml(header.telephone.replace(/[^\d+]/g, ""))}">${escapeHtml(header.telephone)}</a>\n`
                 : "";
             const position = header.fixed ? "fixed" : header.air ? "absolute" : "relative";
-            const generatedBackground = header.air ? "transparent" : background;
+            const generatedBackground = hexToRgba(background, header.backgroundOpacity);
             const linkMarkup = header.links.map((link) =>
                 `    <a href="${escapeHtml(link.url)}">${escapeHtml(link.label)}</a>`
             ).join("\n");
@@ -1481,6 +1589,8 @@
   gap: 20px;
   padding: 16px 24px;
   background: ${generatedBackground};
+  backdrop-filter: blur(${header.backgroundBlur}px);
+  -webkit-backdrop-filter: blur(${header.backgroundBlur}px);
   color: ${textColor};
 }
 .generated-header__logo img { display: block; max-width: 150px; max-height: 44px; width: auto; object-fit: contain; }
@@ -1555,7 +1665,7 @@ ${bodyMarkup}
           const subtitle = section.subtitle
               ? `\n    <p class="generated-body__description">${escapeHtml(section.subtitle)}</p>`
               : "";
-          return `<section class="generated-body__hero" style="background-color:${body.background};color:${body.textColor};">${image}
+          return `<section class="generated-body__hero" style="background:${hexToRgba(body.blockBackground, body.blockOpacity)};color:${body.textColor};backdrop-filter:blur(${body.blockBlur}px);">${image}
   <div class="generated-body__hero-overlay"></div>
   <div class="generated-body__hero-content">${eyebrow}
     <h1>${escapeHtml(section.title)}</h1>${subtitle}${button}
@@ -1584,7 +1694,7 @@ ${bodyMarkup}
           const list = bullets
               ? `\n    <ul class="generated-body__checklist">\n${bullets}\n    </ul>`
               : "";
-          return `<section class="generated-body__about" id="about" style="background-color:${body.background};color:${body.textColor};">${imageMarkup}
+          return `<section class="generated-body__about" id="about" style="background:${hexToRgba(body.blockBackground, body.blockOpacity)};color:${body.textColor};backdrop-filter:blur(${body.blockBlur}px);">${imageMarkup}
   <div class="generated-body__about-content">${eyebrow}
     <h2>${escapeHtml(section.title)}</h2>${text}${list}${button}
   </div>
@@ -1608,7 +1718,7 @@ ${bodyMarkup}
           const intro = section.intro
               ? `\n    <p class="generated-body__description">${escapeHtml(section.intro)}</p>`
               : "";
-          return `<section class="generated-body__contact" id="contact" style="background-color:${body.background};color:${body.textColor};">
+          return `<section class="generated-body__contact" id="contact" style="background:${hexToRgba(body.blockBackground, body.blockOpacity)};color:${body.textColor};backdrop-filter:blur(${body.blockBlur}px);">
   <div class="generated-body__contact-inner">
     <p class="generated-body__eyebrow">Contact</p>
     <h2>${escapeHtml(section.title)}</h2>${intro}
@@ -1621,7 +1731,7 @@ ${bodyMarkup}
   <summary>${escapeHtml(item.question)}<span aria-hidden="true"></span></summary>
   ${item.answer ? `<p>${escapeHtml(item.answer)}</p>` : ""}
 </details>`).join("\n");
-          return `<section class="generated-body__faq" style="background-color:${body.background};color:${body.textColor};">
+          return `<section class="generated-body__faq" style="background:${hexToRgba(body.blockBackground, body.blockOpacity)};color:${body.textColor};backdrop-filter:blur(${body.blockBlur}px);">
   <h2>${escapeHtml(section.title)}</h2>
   <div class="generated-body__faq-list">
 ${items}
@@ -1637,7 +1747,7 @@ ${items}
       <p>${escapeHtml(item.description)}</p>
     </article>`;
       }).join("\n");
-      return `<section class="generated-body__features" style="background-color:${body.background};color:${body.textColor};">
+      return `<section class="generated-body__features" style="background:${hexToRgba(body.blockBackground, body.blockOpacity)};color:${body.textColor};backdrop-filter:blur(${body.blockBlur}px);">
   <h2>${escapeHtml(section.title)}</h2>
   <div class="generated-body__feature-grid">\n${items}\n  </div>
 </section>`;
@@ -1679,7 +1789,7 @@ if (!showGeneratedPage(decodeURIComponent(location.hash.slice(1)))) {
 
   return `<style>
 .generated-body, .generated-body * { box-sizing: border-box; }
-.generated-body { width: 100%; font-family: inherit; }
+.generated-body { width: 100%; font-family: inherit; background: ${body.background}; --body-text-gray: ${body.textGray}; }
 .generated-body__page[hidden] { display: none; }
 .generated-body__page-switcher { display: flex; align-items: center; gap: 10px; padding: 14px 24px; background: #f3f5fa; color: #202334; font-weight: 600; }
 .generated-body__page-switcher select { min-width: 180px; padding: 9px 12px; border: 1px solid #cbd1df; border-radius: 7px; color: inherit; background: #fff; font: inherit; }
@@ -1689,8 +1799,8 @@ if (!showGeneratedPage(decodeURIComponent(location.hash.slice(1)))) {
 .generated-body__hero-overlay { background: linear-gradient(90deg, rgba(0,0,0,.58), rgba(0,0,0,.18)); }
 .generated-body__hero-content { position: relative; z-index: 1; width: min(100%, 560px); margin-inline: auto; }
 .generated-body__hero h1, .generated-body__about h2, .generated-body__contact h2, .generated-body__features h2 { margin: 0 0 16px; font-size: clamp(1.8rem, 3.5vw, 3rem); line-height: 1.12; }
-.generated-body__eyebrow { margin: 0 0 12px; font-size: .75rem; font-weight: 800; letter-spacing: .14em; text-transform: uppercase; }
-.generated-body__description { margin: 0 0 24px; max-width: 620px; line-height: 1.65; }
+.generated-body__eyebrow { margin: 0 0 12px; color: var(--body-text-gray); font-size: .75rem; font-weight: 800; letter-spacing: .14em; text-transform: uppercase; }
+.generated-body__description { margin: 0 0 24px; max-width: 620px; color: var(--body-text-gray); line-height: 1.65; }
 .generated-body__button { display: inline-flex; align-items: center; justify-content: center; min-height: 44px; padding: 11px 22px; border-radius: 999px; background: #28578f; color: #fff; font-size: .8rem; font-weight: 800; text-decoration: none; text-transform: uppercase; }
 .generated-body__hero .generated-body__button { background: #fff; color: #142238; }
 .generated-body__about { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); align-items: center; gap: clamp(28px, 6vw, 76px); padding: clamp(32px, 7vw, 88px); }
@@ -1708,7 +1818,7 @@ if (!showGeneratedPage(decodeURIComponent(location.hash.slice(1)))) {
 .generated-body__checklist { display: grid; gap: 12px; margin: 24px 0; padding: 0; list-style: none; }
 .generated-body__checklist li { line-height: 1.5; }
 .generated-body__checklist li::before { content: "✓"; margin-right: 9px; font-weight: 800; }
-.generated-body__faq { max-width: 100%; padding: clamp(32px, 5vw, 64px) clamp(20px, 12vw, 280px); background: #fff !important; color: #111827 !important; }
+.generated-body__faq { max-width: 100%; padding: clamp(32px, 5vw, 64px) clamp(20px, 12vw, 280px); }
 .generated-body__faq h2 { max-width: 760px; margin: 0 auto 24px; font-size: clamp(1.8rem, 3vw, 2.8rem); line-height: 1.1; text-align: center; }
 .generated-body__faq-list { max-width: 760px; margin: 0 auto; display: grid; gap: 12px; }
 .generated-body__faq-item { overflow: hidden; border: 1px solid #dfe3ea; border-radius: 8px; background: #fff; }
@@ -1733,7 +1843,7 @@ if (!showGeneratedPage(decodeURIComponent(location.hash.slice(1)))) {
   .generated-body__faq-item summary { min-height: 58px; padding: 14px 16px; }
 }
 </style>
-<div class="generated-body">
+<div class="generated-body" style="background:${body.background};--body-text-gray:${body.textGray};">
 ${pageSwitcher}
 ${markup}
 </div>
@@ -1935,6 +2045,28 @@ ${pageScript}`;
         form.elements.logoText.addEventListener("input", () => render(settingsFromForm()));
         form.elements.logo.addEventListener("input", () => render(settingsFromForm()));
         form.elements.telephonePosition.addEventListener("change", () => render(settingsFromForm()));
+        [
+            ["headerBackground", null, null],
+            ["headerBackgroundOpacity", "headerBackgroundOpacityValue", "%"],
+            ["headerBackgroundBlur", "headerBackgroundBlurValue", "px"],
+            ["bodyBlockOpacity", "bodyBlockOpacityValue", "%"],
+            ["bodyBlockBlur", "bodyBlockBlurValue", "px"]
+        ].forEach(([inputId, outputId, suffix]) => {
+            const input = document.getElementById(inputId);
+            if (!input) return;
+            input.addEventListener("input", () => {
+                if (outputId) document.getElementById(outputId).textContent = `${input.value}${suffix}`;
+                render(settingsFromForm());
+                refreshBodyPreview();
+            });
+        });
+        ["headerBackground", "bodyBlockBackground", "bodyTextGray"].forEach((inputId) => {
+            const input = document.getElementById(inputId);
+            if (input) input.addEventListener("input", () => {
+                render(settingsFromForm());
+                refreshBodyPreview();
+            });
+        });
         document.getElementById("downloadSiteHtml").addEventListener("click", () => {
             const blob = new Blob([generatedSiteHtml], { type: "text/html;charset=utf-8" });
             const url = URL.createObjectURL(blob);
