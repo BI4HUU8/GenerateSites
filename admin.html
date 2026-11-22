@@ -20,6 +20,7 @@
             border: 1px solid #e1e5ef;
             border-radius: 12px;
             padding: 24px;
+            margin-bottom: 20px;
             box-shadow: 0 4px 16px rgba(27, 38, 70, .05);
         }
         .intro { margin-bottom: 20px; }
@@ -66,7 +67,10 @@
         .secondary { color: #373d50; background: #edf0f7; }
         .secondary:hover { background: #e0e5f0; }
         .edit-link { white-space: nowrap; }
-        .remove-link { padding: 8px 10px; color: #a12636; background: #fff0f1; }
+        .remove-link { padding: 6px 30px; color: #c22338; 
+            background: #f7a2a7; 
+            font-size: 30px;
+            border: 1px solid #c22338;}
         .actions { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 18px; }
         .preview-wrap, .output-wrap {
             background: #eee; 
@@ -283,6 +287,50 @@
     </header>
 
     <main>
+
+            <section class="panel" aria-labelledby="seo-settings-title">
+                <h2 id="seo-settings-title">Налаштування SEO GEO</h2>
+                <div class="seo-fields">
+                    <label class="field" for="seoTitle">SEO заголовок
+                        <input id="seoTitle" type="text" placeholder="Назва сайту">
+                    </label>
+                    <label class="field" for="seoDescription">Meta description
+                        <textarea id="seoDescription" placeholder="Короткий опис сайту для пошукових систем"></textarea>
+                    </label>
+                    <label class="field" for="seoKeywords">Ключові слова
+                        <input id="seoKeywords" type="text" placeholder="послуга, місто, компанія">
+                    </label>
+                    <label class="field" for="seoCanonical">Canonical URL
+                        <input id="seoCanonical" type="url" placeholder="https://example.com/">
+                    </label>
+                    <label class="field" for="seoRobots">Robots
+                        <input id="seoRobots" type="text" placeholder="index, follow">
+                    </label>
+                    <label class="field" for="seoOgTitle">Open Graph заголовок
+                        <input id="seoOgTitle" type="text" placeholder="Назва для соцмереж">
+                    </label>
+                    <label class="field" for="seoOgDescription">Open Graph опис
+                        <textarea id="seoOgDescription" placeholder="Опис для соцмереж"></textarea>
+                    </label>
+                    <label class="field" for="seoOgImage">Open Graph зображення
+                        <input id="seoOgImage" type="url" placeholder="https://example.com/image.jpg">
+                    </label>
+                    <label class="field" for="geoRegion">GEO регіон
+                        <input id="geoRegion" type="text" placeholder="UA-30 або UA-KY">
+                    </label>
+                    <label class="field" for="geoPlacename">GEO населений пункт
+                        <input id="geoPlacename" type="text" placeholder="Київ">
+                    </label>
+                    <label class="field" for="geoPosition">GEO координати
+                        <input id="geoPosition" type="text" placeholder="50.4501;30.5234">
+                    </label>
+                    <label class="field" for="geoLanguage">Мова контенту
+                        <input id="geoLanguage" type="text" placeholder="uk">
+                    </label>
+                </div>
+            </section>
+
+
             <section class="panel" aria-labelledby="settings-title">
                 <h2 id="settings-title">Налаштування</h2>
                 <form id="settingsForm">
@@ -346,54 +394,9 @@
                         <label>Посилання меню</label>
                         <div id="linksList" class="links-list"></div>
                     </div>
-                    <div class="actions">
-                        <button class="primary" type="submit">Згенерувати</button>
-                    </div>
+                    <p class="hint">Зміни автоматично зберігаються у цьому браузері.</p>
                     <p id="status" class="status" role="status" aria-live="polite"></p>
                 </form>
-            </section>
-
-            <section class="panel" aria-labelledby="seo-settings-title">
-                <h2 id="seo-settings-title">Налаштування SEO GEO</h2>
-                <p class="hint">Метадані та геолокація будуть додані в <code>&lt;head&gt;</code> згенерованого сайту.</p>
-                <div class="seo-fields">
-                    <label class="field" for="seoTitle">SEO заголовок
-                        <input id="seoTitle" type="text" placeholder="Назва сайту">
-                    </label>
-                    <label class="field" for="seoDescription">Meta description
-                        <textarea id="seoDescription" placeholder="Короткий опис сайту для пошукових систем"></textarea>
-                    </label>
-                    <label class="field" for="seoKeywords">Ключові слова
-                        <input id="seoKeywords" type="text" placeholder="послуга, місто, компанія">
-                    </label>
-                    <label class="field" for="seoCanonical">Canonical URL
-                        <input id="seoCanonical" type="url" placeholder="https://example.com/">
-                    </label>
-                    <label class="field" for="seoRobots">Robots
-                        <input id="seoRobots" type="text" placeholder="index, follow">
-                    </label>
-                    <label class="field" for="seoOgTitle">Open Graph заголовок
-                        <input id="seoOgTitle" type="text" placeholder="Назва для соцмереж">
-                    </label>
-                    <label class="field" for="seoOgDescription">Open Graph опис
-                        <textarea id="seoOgDescription" placeholder="Опис для соцмереж"></textarea>
-                    </label>
-                    <label class="field" for="seoOgImage">Open Graph зображення
-                        <input id="seoOgImage" type="url" placeholder="https://example.com/image.jpg">
-                    </label>
-                    <label class="field" for="geoRegion">GEO регіон
-                        <input id="geoRegion" type="text" placeholder="UA-30 або UA-KY">
-                    </label>
-                    <label class="field" for="geoPlacename">GEO населений пункт
-                        <input id="geoPlacename" type="text" placeholder="Київ">
-                    </label>
-                    <label class="field" for="geoPosition">GEO координати
-                        <input id="geoPosition" type="text" placeholder="50.4501;30.5234">
-                    </label>
-                    <label class="field" for="geoLanguage">Мова контенту
-                        <input id="geoLanguage" type="text" placeholder="uk">
-                    </label>
-                </div>
             </section>
 
 
@@ -469,19 +472,25 @@
             </div>
         </section>
 
-        <section class="output-wrap" aria-labelledby="output-title">
+        <section class="output-wrap" aria-labelledby="output-title" hidden>
             <h2 id="output-title">Згенерований HTML сайту</h2>
                 <button id="copySiteHtml" class="secondary" type="button">Копіювати код сайту</button>
             <textarea id="generatedSiteHtml" aria-label="Згенерований HTML сайту" readonly></textarea>
         </section>
 
 
-            <section class="panel" aria-labelledby="json-title">
+            <section class="panel" aria-labelledby="json-title" hidden>
                 <h2 id="json-title">JSON налаштувань</h2>
                 <p class="hint">Параметри header і body зберігаються у cookie <code>setting</code>.</p>
                 <textarea id="settingsJson" aria-label="JSON налаштувань" readonly></textarea>
             </section>
 
+
+            <section class="panel" >
+                    <div class="actions">
+                        <button id="clearAutosave" class="secondary" type="button">Збросити налаштування сайту</button>
+                    </div>
+            </section>
 
     </main>
 
@@ -550,6 +559,7 @@
         };
         const COOKIE_NAME = "setting";
         const COOKIE_MAX_BYTES = 3800;
+        const AUTOSAVE_KEY = "site_builder_settings_autosave";
         const form = document.getElementById("settingsForm");
         const linksList = document.getElementById("linksList");
         const settingsJson = document.getElementById("settingsJson");
@@ -561,6 +571,7 @@
         const status = document.getElementById("status");
         let bodyPages = [];
         let activeBodyPageIndex = 0;
+        let autosaveTimer = null;
 
         function escapeHtml(value) {
             return String(value).replace(/[&<>"']/g, (character) => ({
@@ -825,10 +836,13 @@
             const removeButton = document.createElement("button");
             removeButton.className = "remove-link";
             removeButton.type = "button";
-            removeButton.textContent = "Видалити";
+            removeButton.textContent = "-";
             removeButton.addEventListener("click", () => {
                 const linkName = labelInput.value.trim() || urlInput.value.trim() || "це посилання";
-                if (window.confirm(`Видалити посилання «${linkName}»?`)) row.remove();
+                if (window.confirm(`Видалити посилання «${linkName}»?`)) {
+                    row.remove();
+                    scheduleAutosave();
+                }
             });
             row.append(labelInput, urlInput, editButton, removeButton);
             linksList.appendChild(row);
@@ -890,6 +904,7 @@
                 if (window.confirm("Видалити це запитання?")) {
                     row.remove();
                     refreshBodyPreview();
+                    scheduleAutosave();
                 }
             });
             row.append(questionField, answerField, removeButton);
@@ -937,9 +952,13 @@
             const removeButton = document.createElement("button");
             removeButton.className = "remove-link";
             removeButton.type = "button";
-            removeButton.textContent = "Видалити блок";
+            removeButton.textContent = "-";
             removeButton.addEventListener("click", () => {
-                if (window.confirm(`Видалити блок «${headingText}»?`)) card.remove();
+                if (window.confirm(`Видалити блок «${headingText}»?`)) {
+                    card.remove();
+                    refreshBodyPreview();
+                    scheduleAutosave();
+                }
             });
             actions.append(heading, enabledLabel, removeButton);
             card.appendChild(actions);
@@ -984,6 +1003,7 @@
                 addButton.addEventListener("click", () => {
                     addFaqItemEditor(faqItems);
                     refreshBodyPreview();
+                    scheduleAutosave();
                 });
                 faqEditor.append(faqItems, addButton);
                 settings.appendChild(faqEditor);
@@ -1064,8 +1084,9 @@
             else if (activeBodyPageIndex === pageIndex) {
                 activeBodyPageIndex = Math.min(pageIndex, bodyPages.length - 1);
             }
-            renderBodyPageEditor(-1);
+            renderBodyPageEditor(activeBodyPageIndex);
             refreshBodyPreview();
+            scheduleAutosave();
         }
 
         function renderBodyPageList(openPageIndex = -1) {
@@ -1097,7 +1118,7 @@
                 const removeButton = document.createElement("button");
                 removeButton.className = "remove-link";
                 removeButton.type = "button";
-                removeButton.textContent = "Видалити";
+                removeButton.textContent = "-";
                 removeButton.disabled = bodyPages.length <= 1;
                 removeButton.setAttribute("aria-label", `Видалити сторінку ${page.name || index + 1}`);
                 removeButton.addEventListener("click", () => removeBodyPage(index));
@@ -1254,7 +1275,7 @@
             });
             addMissingPageLinks(bodyPages);
             activeBodyPageIndex = 0;
-            renderBodyPageEditor(-1);
+            renderBodyPageEditor(activeBodyPageIndex);
         }
 
         function emptyBodySection(type) {
@@ -1653,6 +1674,21 @@ ${pageScript}`;
             status.classList.toggle("error", isError);
         }
 
+        function scheduleAutosave() {
+            window.clearTimeout(autosaveTimer);
+            autosaveTimer = window.setTimeout(() => {
+                autosaveTimer = null;
+                try {
+                    const settings = settingsFromForm();
+                    localStorage.setItem(AUTOSAVE_KEY, JSON.stringify(settings));
+                    render(settings);
+                    setStatus("Зміни автоматично збережено у цьому браузері.");
+                } catch (error) {
+                    setStatus(`Автозбереження не виконано: ${error.message}`, true);
+                }
+            }, 350);
+        }
+
         function encodeCookieValue(value) {
             const bytes = new TextEncoder().encode(value);
             let binary = "";
@@ -1688,8 +1724,14 @@ ${pageScript}`;
 
         async function initialize() {
             let settings;
+            try {
+                const autosaved = localStorage.getItem(AUTOSAVE_KEY);
+                if (autosaved) settings = readSettings(JSON.parse(autosaved));
+            } catch (error) {
+                setStatus(`Не вдалося прочитати автозбереження: ${error.message}`, true);
+            }
             const saved = getCookie(COOKIE_NAME);
-            if (saved) {
+            if (!settings && saved) {
                 try {
                     settings = readSettings(JSON.parse(saved));
                 } catch (error) {
@@ -1715,6 +1757,7 @@ ${pageScript}`;
             try {
                 const settings = settingsFromForm();
                 const json = JSON.stringify(settings);
+                localStorage.setItem(AUTOSAVE_KEY, json);
                 const cookieValue = encodeCookieValue(json);
                 if (new TextEncoder().encode(`${COOKIE_NAME}=${cookieValue}`).length > COOKIE_MAX_BYTES) {
                     throw new Error("Налаштування завеликі для cookie. Скоротіть кількість або довжину посилань.");
@@ -1724,9 +1767,30 @@ ${pageScript}`;
                 const saved = getCookie(COOKIE_NAME);
                 if (saved !== json) throw new Error("Браузер не зберіг cookie. Перевірте налаштування cookie для цієї сторінки.");
                 render(readSettings(JSON.parse(saved)));
-                setStatus("Налаштування збережені в cookie setting, header і body згенеровано.");
+                setStatus("Налаштування збережені, HTML згенеровано.");
             } catch (error) {
                 setStatus(error.message, true);
+            }
+        });
+
+        document.addEventListener("input", (event) => {
+            if (event.target.matches("input, textarea")) scheduleAutosave();
+        });
+        document.addEventListener("change", (event) => {
+            if (event.target.matches("input, textarea, select")) scheduleAutosave();
+        });
+        document.getElementById("clearAutosave").addEventListener("click", async () => {
+            if (!window.confirm("Видалити всі збережені налаштування та завантажити початкові?")) return;
+            try {
+                window.clearTimeout(autosaveTimer);
+                autosaveTimer = null;
+                localStorage.removeItem(AUTOSAVE_KEY);
+                const secure = location.protocol === "https:" ? "; Secure" : "";
+                document.cookie = `${COOKIE_NAME}=; Path=/; Max-Age=0; SameSite=Lax${secure}`;
+                await initialize();
+                setStatus("Збереження видалено; завантажено початкові налаштування.");
+            } catch (error) {
+                setStatus(`Не вдалося видалити збереження: ${error.message}`, true);
             }
         });
 
@@ -1740,6 +1804,7 @@ ${pageScript}`;
             );
             renderBodyPageEditor();
             refreshBodyPreview();
+            scheduleAutosave();
         });
         document.getElementById("addBodyPage").addEventListener("click", () => {
             saveActiveBodyPage();
@@ -1753,8 +1818,9 @@ ${pageScript}`;
             bodyPages.push(page);
             addLinkRow({ label: page.name, url: `#${page.slug}` }, page.slug);
             activeBodyPageIndex = bodyPages.length - 1;
-            renderBodyPageEditor(-1);
+            renderBodyPageEditor(activeBodyPageIndex);
             refreshBodyPreview();
+            scheduleAutosave();
         });
         document.getElementById("bodyPageName").addEventListener("input", (event) => {
             const pageCard = document.getElementById("bodyPageList").children[activeBodyPageIndex];
@@ -1824,6 +1890,7 @@ ${pageScript}`;
                 const settings = readSettings(parsed);
                 updateForm(settings);
                 render(settings);
+                scheduleAutosave();
                 setStatus(`Налаштування завантажено з ${file.name}.`);
             } catch (error) {
                 setStatus(`Не вдалося завантажити налаштування: ${error.message}`, true);
