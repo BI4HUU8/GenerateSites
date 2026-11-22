@@ -125,6 +125,10 @@
         .body-section.is-collapsed .section-actions { margin-bottom: 0; }
         .section-enabled { display: flex; align-items: center; gap: 6px; margin-left: auto; font-size: .85rem; font-weight: 500; }
         .section-enabled input { margin: 0; }
+        .section-order { display: flex; gap: 6px; }
+        .section-order button { min-width: 36px; height: 36px; padding: 0; color: #373d50; background: #edf0f7; font-size: 1rem; line-height: 1; }
+        .section-order button:hover:not(:disabled) { background: #dfe5f0; }
+        .section-order button:disabled { cursor: default; opacity: .35; }
         .body-page-list { display: grid; gap: 10px; margin-bottom: 16px; }
         .body-page-card { overflow: hidden; border: 1px solid #e1e5ef; border-radius: 9px; background: #fbfcff; }
         .body-page-header { display: flex; align-items: center; gap: 10px; padding: 8px 14px; }
@@ -166,7 +170,6 @@
             background: #f8f9fc;
             font: 13px/1.5 ui-monospace, SFMono-Regular, Consolas, monospace;
         }
-        #generatedSiteHtml { min-height: 420px; }
         .status { min-height: 1.5em; margin: 12px 0 0; color: #3a526f; font-size: .92rem; }
         .status.error { color: #a12636; }
         .hint { margin: -8px 0 16px; color: #657087; font-size: .85rem; }
@@ -394,7 +397,6 @@
                         <label>Посилання меню</label>
                         <div id="linksList" class="links-list"></div>
                     </div>
-                    <p class="hint">Зміни автоматично зберігаються у цьому браузері.</p>
                     <p id="status" class="status" role="status" aria-live="polite"></p>
                 </form>
             </section>
@@ -435,21 +437,18 @@
                             </label>
                         </div>
                         <div id="bodySections" class="section-list"></div>
+                        <div class="actions body-block-add">
+                            <select id="newBodySection" aria-label="Тип нового блоку">
+                                <option value="hero">Hero — обкладинка</option>
+                                <option value="about">About — про практику</option>
+                                <option value="contact">Contact — контакти</option>
+                                <option value="faq">FAQ — поширені питання</option>
+                                <option value="features">Features — переваги</option>
+                            </select>
+                            <button id="addBodySection" class="secondary" type="button">Додати блок сайту</button>
+                        </div>
                     </div>
                 </div>
-                </section>
-
-                <section class="panel" >
-                    <div class="actions body-block-add">
-                        <select id="newBodySection" aria-label="Тип нового блоку">
-                            <option value="hero">Hero — обкладинка</option>
-                            <option value="about">About — про практику</option>
-                            <option value="contact">Contact — контакти</option>
-                            <option value="faq">FAQ — поширені питання</option>
-                            <option value="features">Features — переваги</option>
-                        </select>
-                        <button id="addBodySection" class="secondary" type="button">Додати блок сайту</button>
-                    </div>
                 </section>
 
 
@@ -474,18 +473,6 @@
                 <a href="admin.html" download="admin.html"><button class="secondary" type="button">Скачати admin.html</button></a>
                 <input id="settingsJsonFile" type="file" accept=".json,application/json" hidden>
             </div>
-        </section>
-
-        <section class="output-wrap" aria-labelledby="output-title" hidden>
-            <h2 id="output-title">Згенерований HTML сайту</h2>
-            <button id="copySiteHtml" class="secondary" type="button">Копіювати код сайту</button>
-            <textarea id="generatedSiteHtml" aria-label="Згенерований HTML сайту" readonly></textarea>
-        </section>
-
-        <section class="panel" aria-labelledby="json-title" hidden>
-            <h2 id="json-title">JSON налаштувань</h2>
-            <p class="hint">Параметри header і body зберігаються у cookie <code>setting</code>.</p>
-            <textarea id="settingsJson" aria-label="JSON налаштувань" readonly></textarea>
         </section>
 
         <section class="panel" >
@@ -617,8 +604,7 @@
         const AUTOSAVE_KEY = "site_builder_settings_autosave";
         const form = document.getElementById("settingsForm");
         const linksList = document.getElementById("linksList");
-        const settingsJson = document.getElementById("settingsJson");
-        const generatedSiteHtml = document.getElementById("generatedSiteHtml");
+        let generatedSiteHtml = "";
         const preview = document.getElementById("preview");
         const bodySections = document.getElementById("bodySections");
         const bodyPreview = document.getElementById("bodyPreview");
@@ -1004,6 +990,19 @@
             enabledInput.dataset.enabled = "true";
             enabledInput.checked = sectionData.enabled !== false;
             enabledLabel.append(enabledInput, document.createTextNode("Увімкнено"));
+            const orderButtons = document.createElement("div");
+            orderButtons.className = "section-order";
+            const moveUpButton = document.createElement("button");
+            moveUpButton.type = "button";
+            moveUpButton.textContent = "↑";
+            moveUpButton.setAttribute("aria-label", `Перемістити блок «${headingText}» вгору`);
+            moveUpButton.addEventListener("click", () => moveBodySection(card, -1));
+            const moveDownButton = document.createElement("button");
+            moveDownButton.type = "button";
+            moveDownButton.textContent = "↓";
+            moveDownButton.setAttribute("aria-label", `Перемістити блок «${headingText}» вниз`);
+            moveDownButton.addEventListener("click", () => moveBodySection(card, 1));
+            orderButtons.append(moveUpButton, moveDownButton);
             const removeButton = document.createElement("button");
             removeButton.className = "remove-link";
             removeButton.type = "button";
@@ -1011,11 +1010,12 @@
             removeButton.addEventListener("click", () => {
                 if (window.confirm(`Видалити блок «${headingText}»?`)) {
                     card.remove();
+                    updateBodySectionMoveButtons();
                     refreshBodyPreview();
                     scheduleAutosave();
                 }
             });
-            actions.append(heading, enabledLabel, removeButton);
+            actions.append(heading, enabledLabel, orderButtons, removeButton);
             card.appendChild(actions);
             const settings = document.createElement("div");
             settings.className = "section-settings";
@@ -1101,6 +1101,36 @@
                 return section;
             });
             return sections;
+        }
+
+        function updateBodySectionMoveButtons(container = bodySections) {
+            const cards = [...container.querySelectorAll(":scope > .body-section")];
+            cards.forEach((card, index) => {
+                const buttons = card.querySelectorAll(".section-order button");
+                if (buttons[0]) buttons[0].disabled = index === 0;
+                if (buttons[1]) buttons[1].disabled = index === cards.length - 1;
+            });
+        }
+
+        function moveBodySection(card, direction) {
+            const cards = [...bodySections.querySelectorAll(":scope > .body-section")];
+            const index = cards.indexOf(card);
+            const targetIndex = index + direction;
+            if (index < 0 || targetIndex < 0 || targetIndex >= cards.length) return;
+
+            if (direction < 0) {
+                bodySections.insertBefore(card, cards[targetIndex]);
+            } else if (cards[targetIndex].nextSibling) {
+                bodySections.insertBefore(card, cards[targetIndex].nextSibling);
+            } else {
+                bodySections.appendChild(card);
+            }
+
+            updateBodySectionMoveButtons();
+            saveActiveBodyPage();
+            refreshBodyPreview();
+            scheduleAutosave();
+            card.scrollIntoView({ block: "nearest", behavior: "smooth" });
         }
 
         function saveActiveBodyPage() {
@@ -1205,6 +1235,7 @@
                 document.getElementById("bodyPageSlug").value = page.slug;
                 bodySections.replaceChildren();
                 page.sections.forEach(addBodySection);
+                updateBodySectionMoveButtons();
             }
             renderBodyPageList(openPageIndex);
         }
@@ -1422,7 +1453,6 @@
             if (header.fixed) modes.push("Fixed: закріплена зверху");
             if (!modes.length) modes.push("Звичайний режим");
             previewMode.textContent = `Попередній перегляд: ${modes.join(" · ")}${header.telephoneEnabled ? ` · телефон ${header.telephonePosition === "after" ? "після" : "перед"} меню` : ""}`;
-            settingsJson.value = JSON.stringify(settings, null, 2);
             const logoMarkup = header.logoType === "text"
                 ? (header.logoText
                     ? `  <a class="generated-header__logo generated-header__logo--text" href="/" aria-label="На головну">${escapeHtml(header.logoText)}</a>\n`
@@ -1485,7 +1515,7 @@ ${header.telephoneEnabled && header.telephonePosition === "after" ? phoneMarkup 
   const geoPlacename = geo.placename ? `\n  <meta name="geo.placename" content="${escapeHtml(geo.placename)}">` : "";
   const geoPosition = geo.position ? `\n  <meta name="geo.position" content="${escapeHtml(geo.position)}">\n  <meta name="ICBM" content="${escapeHtml(geo.position.replace(";", ", "))}">` : "";
   const language = geo.language || "uk";
-  generatedSiteHtml.value = `<!doctype html>
+  generatedSiteHtml = `<!doctype html>
 <html lang="${escapeHtml(language)}">
 <head>
   <meta charset="utf-8">
@@ -1905,16 +1935,8 @@ ${pageScript}`;
         form.elements.logoText.addEventListener("input", () => render(settingsFromForm()));
         form.elements.logo.addEventListener("input", () => render(settingsFromForm()));
         form.elements.telephonePosition.addEventListener("change", () => render(settingsFromForm()));
-        document.getElementById("copySiteHtml").addEventListener("click", async () => {
-            try {
-                await navigator.clipboard.writeText(generatedSiteHtml.value);
-                setStatus("HTML сайту скопійовано.");
-            } catch (error) {
-                setStatus(`Не вдалося скопіювати HTML сайту: ${error.message}`, true);
-            }
-        });
         document.getElementById("downloadSiteHtml").addEventListener("click", () => {
-            const blob = new Blob([generatedSiteHtml.value], { type: "text/html;charset=utf-8" });
+            const blob = new Blob([generatedSiteHtml], { type: "text/html;charset=utf-8" });
             const url = URL.createObjectURL(blob);
             const anchor = document.createElement("a");
             anchor.href = url;
@@ -1934,7 +1956,7 @@ ${pageScript}`;
                 anchor.download = "setting.json";
                 anchor.click();
                 URL.revokeObjectURL(url);
-                settingsJson.value = json;
+                localStorage.setItem(AUTOSAVE_KEY, JSON.stringify(settings));
                 setStatus("Файл setting.json завантажено.");
             } catch (error) {
                 setStatus(error.message, true);
