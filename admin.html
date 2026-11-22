@@ -450,6 +450,11 @@
                         </select>
                         <button id="addBodySection" class="secondary" type="button">Додати блок сайту</button>
                     </div>
+                </section>
+
+
+
+                <section class="panel" >
                     <div class="actions body-block-add">
                         <button id="addBodyPage" class="secondary" type="button">Додати сторінку</button>
                     </div>
@@ -467,30 +472,33 @@
                 <button id="downloadSiteHtml" class="secondary" type="button">Скачати сайт index.html</button>
                 <button id="downloadSettingsJson" class="secondary" type="button">Скачати налаштування сай</button>
                 <a href="admin.html" download="admin.html"><button class="secondary" type="button">Скачати admin.html</button></a>
-                <button id="uploadSettingsJson" class="secondary" type="button">Завантажити налаштування сайту</button>
                 <input id="settingsJsonFile" type="file" accept=".json,application/json" hidden>
             </div>
         </section>
 
         <section class="output-wrap" aria-labelledby="output-title" hidden>
             <h2 id="output-title">Згенерований HTML сайту</h2>
-                <button id="copySiteHtml" class="secondary" type="button">Копіювати код сайту</button>
+            <button id="copySiteHtml" class="secondary" type="button">Копіювати код сайту</button>
             <textarea id="generatedSiteHtml" aria-label="Згенерований HTML сайту" readonly></textarea>
         </section>
 
+        <section class="panel" aria-labelledby="json-title" hidden>
+            <h2 id="json-title">JSON налаштувань</h2>
+            <p class="hint">Параметри header і body зберігаються у cookie <code>setting</code>.</p>
+            <textarea id="settingsJson" aria-label="JSON налаштувань" readonly></textarea>
+        </section>
 
-            <section class="panel" aria-labelledby="json-title" hidden>
-                <h2 id="json-title">JSON налаштувань</h2>
-                <p class="hint">Параметри header і body зберігаються у cookie <code>setting</code>.</p>
-                <textarea id="settingsJson" aria-label="JSON налаштувань" readonly></textarea>
-            </section>
+        <section class="panel" >
+                <div class="actions">
+                <button id="uploadSettingsJson" class="secondary" type="button">Завантажити налаштування сайту</button>
+                </div>
+        </section>
 
-
-            <section class="panel" >
-                    <div class="actions">
-                        <button id="clearAutosave" class="secondary" type="button">Збросити налаштування сайту</button>
-                    </div>
-            </section>
+        <section class="panel" >
+                <div class="actions">
+                    <button id="clearAutosave" class="secondary" type="button">Збросити налаштування сайту</button>
+                </div>
+        </section>
 
     </main>
 
@@ -534,9 +542,56 @@
                 template1: {
                     enabled: true,
                     background: "#edf5f9",
-                    textColor: "#142238",
+                    textColor: "#141228",
                     pages: [
-                        { name: "Головна", slug: "home", sections: [] }
+                        {
+                            name: "Главная",
+                            slug: "home",
+                            sections: [
+                                {
+                                    type: "hero",
+                                    enabled: true,
+                                    eyebrow: "",
+                                    title: "Заголовок",
+                                    subtitle: "Текст підзаголовка.",
+                                    backgroundImage: "",
+                                    buttonLabel: "",
+                                    buttonUrl: ""
+                                },
+                                {
+                                    type: "about",
+                                    enabled: true,
+                                    eyebrow: "Над заголовок",
+                                    title: "Заголовок",
+                                    text: "Текст підзаголовка.",
+                                    images: ["/images/1.jpg", "/images/2.jpg", "/images/3.jpg"],
+                                    items: ["Текст.", "Текст.", "Текст.", "Текст."],
+                                    buttonLabel: "Познакомьтесь с командой",
+                                    buttonUrl: "/team"
+                                },
+                                {
+                                    type: "contact",
+                                    enabled: true,
+                                    title: "Contact",
+                                    intro: "Напишіть або зателефонуйте нам.",
+                                    phone: "",
+                                    email: "",
+                                    address: "",
+                                    hours: ""
+                                },
+                                {
+                                    type: "faq",
+                                    enabled: true,
+                                    title: "Common Questions",
+                                    items: [
+                                        { question: "Do you offer 24/7 emergency service?", answer: "" },
+                                        { question: "How often should I service my HVAC system?", answer: "" },
+                                        { question: "Are your technicians licensed and insured?", answer: "" },
+                                        { question: "Do you offer financing for new installations?", answer: "" }
+                                    ]
+                                }
+                            ]
+                        }
                     ]
                 }
             },
@@ -1724,19 +1779,12 @@ ${pageScript}`;
 
         async function initialize() {
             let settings;
+            let settingsFileError = null;
             try {
                 const autosaved = localStorage.getItem(AUTOSAVE_KEY);
                 if (autosaved) settings = readSettings(JSON.parse(autosaved));
             } catch (error) {
                 setStatus(`Не вдалося прочитати автозбереження: ${error.message}`, true);
-            }
-            const saved = getCookie(COOKIE_NAME);
-            if (!settings && saved) {
-                try {
-                    settings = readSettings(JSON.parse(saved));
-                } catch (error) {
-                    setStatus(`Не вдалося прочитати збережені налаштування: ${error.message}`, true);
-                }
             }
             if (!settings) {
                 try {
@@ -1744,8 +1792,21 @@ ${pageScript}`;
                     if (!response.ok) throw new Error(`HTTP ${response.status}`);
                     settings = readSettings(await response.json());
                 } catch (error) {
-                    settings = DEFAULT_SETTINGS;
-                    setStatus(`Не вдалося завантажити setting.json (${error.message}); використано вбудовані налаштування.`, true);
+                    settingsFileError = error;
+                }
+            }
+            if (!settings) {
+                try {
+                    const saved = getCookie(COOKIE_NAME);
+                    if (saved) settings = readSettings(JSON.parse(saved));
+                } catch (error) {
+                    setStatus(`Не вдалося прочитати збережені налаштування: ${error.message}`, true);
+                }
+            }
+            if (!settings) {
+                settings = DEFAULT_SETTINGS;
+                if (settingsFileError) {
+                    setStatus(`Не вдалося завантажити setting.json (${settingsFileError.message}); використано вбудовані налаштування.`, true);
                 }
             }
             updateForm(settings);
