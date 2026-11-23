@@ -28,7 +28,7 @@
         .layout { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 20px; }
         .panel h2 { font-size: 1.15rem; }
         .field { display: grid; gap: 6px; margin-bottom: 16px; }
-        label, legend { font-weight: 600; font-size: .92rem; }
+        label, legend { font-weight: 600; font-size: .92rem; margin-bottom: 6px; }
         input, textarea, select, button { font: inherit; }
         select { border: 1px solid #cbd1df; border-radius: 7px; padding: 10px 11px; color: inherit; background: #fff; }
         input[type="text"], input[type="url"], .link-label, .link-url {
@@ -54,7 +54,7 @@
         .links-list { display: grid; gap: 10px; }
         .link-row { display: grid; grid-template-columns: 1fr 1.2fr auto auto; gap: 8px; align-items: center; }
         button {
-            border: 1px solid #cbd1df;
+            border: 1px solid #20335f;
             border-radius: 7px;
             padding: 15px 20px;
             cursor: pointer;
@@ -62,9 +62,9 @@
         }
         button:focus-visible, input:focus-visible, textarea:focus-visible { outline: 3px solid #aeb8ff; outline-offset: 2px; }
         .primary { color: #fff; background: #5146e5; }
-        .primary:hover { background: #4036c7; }
-        .secondary { color: #373d50; background: #edf0f7; }
-        .secondary:hover { background: #e0e5f0; }
+        .primary:hover { background: #6762a8; }
+        .secondary { color: #ffffff; background: #355392; }
+        .secondary:hover { background: #5074c2; }
         .edit-link { white-space: nowrap; }
         .remove-link { padding: 6px 30px; color: #c22338; 
             background: #f7a2a7; 
@@ -180,6 +180,7 @@
             border: 1px solid #dfe3ea;
             border-radius: 9px;
             background: #fbfcff;
+            margin-bottom: 16px;
         }
         .settings-details + .settings-details { margin-top: 12px; }
         .settings-details summary {
@@ -1757,6 +1758,25 @@ ${items}
 ${sectionMarkup}
 </main>`;
   }).join("\n");
+  const faqEntities = pages.flatMap((page) => page.sections
+      .filter((section) => section.enabled && section.type === "faq")
+      .flatMap((section) => section.items
+          .filter((item) => item.question && item.answer)
+          .map((item) => ({
+              "@type": "Question",
+              name: item.question,
+              acceptedAnswer: {
+                  "@type": "Answer",
+                  text: item.answer
+              }
+          }))));
+  const faqStructuredData = faqEntities.length
+      ? `<script type="application/ld+json">${JSON.stringify({
+          "@context": "https://schema.org",
+          "@type": "FAQPage",
+          mainEntity: faqEntities
+      }).replace(/</g, "\\u003c")}<\/script>`
+      : "";
   const pageSwitcher = includePageSwitcher && onlyPageIndex === null && body.pages.length > 1
       ? `<label class="generated-body__page-switcher">Сторінка
   <select data-generated-page-switcher aria-label="Вибрати сторінку">
@@ -1847,7 +1867,8 @@ if (!showGeneratedPage(decodeURIComponent(location.hash.slice(1)))) {
 ${pageSwitcher}
 ${markup}
 </div>
-${pageScript}`;
+${pageScript}
+${faqStructuredData}`;
         }
 
         function renderBody(settings) {
