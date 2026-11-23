@@ -115,10 +115,13 @@
     "ogTitle": "",
     "ogDescription": "",
     "ogImage": "",
-    "geo": {
-      "region": "",
-      "placename": "",
-      "position": "",
+    "generative": {
+      "name": "",
+      "summary": "",
+      "audience": "",
+      "services": [],
+      "expertise": [],
+      "profiles": [],
       "language": "uk"
     }
   }

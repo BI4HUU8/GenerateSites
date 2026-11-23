@@ -175,6 +175,7 @@
         .seo-fields { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
         .seo-fields .field { margin-bottom: 16px; }
         .seo-fields textarea { min-height: 86px; }
+        .seo-fields .seo-subsection-title { grid-column: 1 / -1; margin: 8px 0 0; font-size: 1rem; }
         .settings-details {
             overflow: hidden;
             border: 1px solid #dfe3ea;
@@ -343,16 +344,26 @@
                     <label class="field" for="seoOgImage">Open Graph зображення
                         <input id="seoOgImage" type="url" placeholder="https://example.com/image.jpg">
                     </label>
-                    <label class="field" for="geoRegion">GEO регіон
-                        <input id="geoRegion" type="text" placeholder="UA-30 або UA-KY">
+                    <h3 class="seo-subsection-title">GEO — структура інформації для AI-пошуку</h3>
+                    <label class="field" for="geoName">Назва бренду або організації
+                        <input id="geoName" type="text" placeholder="Назва компанії">
                     </label>
-                    <label class="field" for="geoPlacename">GEO населений пункт
-                        <input id="geoPlacename" type="text" placeholder="Київ">
+                    <label class="field" for="geoSummary">Коротко: хто ви та чим допомагаєте
+                        <textarea id="geoSummary" placeholder="Опишіть компанію, основну діяльність і цінність для клієнтів"></textarea>
                     </label>
-                    <label class="field" for="geoPosition">GEO координати
-                        <input id="geoPosition" type="text" placeholder="50.4501;30.5234">
+                    <label class="field" for="geoAudience">Для кого працюєте
+                        <textarea id="geoAudience" placeholder="Опишіть цільову аудиторію або тип клієнтів"></textarea>
                     </label>
-                    <label class="field" for="geoLanguage">Мова контенту
+                    <label class="field" for="geoServices">Основні послуги (кожне з нового рядка)
+                        <textarea id="geoServices" placeholder="Консультація&#10;Розробка сайту"></textarea>
+                    </label>
+                    <label class="field" for="geoExpertise">Експертність і підтверджені факти (кожне з нового рядка)
+                        <textarea id="geoExpertise" placeholder="Працюємо з 2015 року&#10;Сертифіковані спеціалісти"></textarea>
+                    </label>
+                    <label class="field" for="geoProfiles">Офіційні профілі та джерела (URL, кожен з нового рядка)
+                        <textarea id="geoProfiles" placeholder="https://example.com/social-profile"></textarea>
+                    </label>
+                    <label class="field" for="geoLanguage">Мова сайту
                         <input id="geoLanguage" type="text" placeholder="uk">
                     </label>
                     </div>
@@ -650,10 +661,13 @@
                 ogTitle: "",
                 ogDescription: "",
                 ogImage: "",
-                geo: {
-                    region: "",
-                    placename: "",
-                    position: "",
+                generative: {
+                    name: "",
+                    summary: "",
+                    audience: "",
+                    services: [],
+                    expertise: [],
+                    profiles: [],
                     language: "uk"
                 }
             }
@@ -690,6 +704,11 @@
         function clampNumber(value, min, max, fallback) {
             const number = Number(value);
             return Number.isFinite(number) ? Math.max(min, Math.min(max, number)) : fallback;
+        }
+
+        function textList(value) {
+            const values = Array.isArray(value) ? value : typeof value === "string" ? value.split("\n") : [];
+            return values.map((item) => String(item).trim()).filter(Boolean);
         }
 
         function safeUrl(value, fieldName) {
@@ -734,11 +753,26 @@
                 return { label: link.label.trim(), url: safeUrl(link.url, `Посилання ${index + 1}`) };
             }).filter((link) => link.label && link.url);
             const seoInput = value.seo && typeof value.seo === "object" ? value.seo : {};
-            const geoInput = seoInput.geo && typeof seoInput.geo === "object" ? seoInput.geo : {};
+            const generativeInput = seoInput.generative && typeof seoInput.generative === "object"
+                ? seoInput.generative
+                : {};
+            const legacyGeoInput = seoInput.geo && typeof seoInput.geo === "object" ? seoInput.geo : {};
             const seoText = (field, fallback = "") => {
                 const text = seoInput[field];
                 return String(text === undefined ? fallback : text).trim();
             };
+            const profileLinks = textList(generativeInput.profiles).map((profile, index) => {
+                let url;
+                try {
+                    url = new URL(profile);
+                } catch {
+                    throw new Error(`GEO-профіль ${index + 1} має бути повним URL з http:// або https://.`);
+                }
+                if (!["http:", "https:"].includes(url.protocol)) {
+                    throw new Error(`GEO-профіль ${index + 1} має бути URL з http:// або https://.`);
+                }
+                return url.href;
+            });
             const seo = {
                 title: seoText("title"),
                 description: seoText("description"),
@@ -748,11 +782,14 @@
                 ogTitle: seoText("ogTitle"),
                 ogDescription: seoText("ogDescription"),
                 ogImage: safeUrl(seoText("ogImage"), "Open Graph зображення"),
-                geo: {
-                    region: String(geoInput.region || "").trim(),
-                    placename: String(geoInput.placename || "").trim(),
-                    position: String(geoInput.position || "").trim(),
-                    language: String(geoInput.language || "uk").trim()
+                generative: {
+                    name: String(generativeInput.name || "").trim(),
+                    summary: String(generativeInput.summary || "").trim(),
+                    audience: String(generativeInput.audience || "").trim(),
+                    services: textList(generativeInput.services),
+                    expertise: textList(generativeInput.expertise),
+                    profiles: profileLinks,
+                    language: seoText("language", String(legacyGeoInput.language || "uk"))
                 }
             };
             const bodyConfig = value.body?.template1 || DEFAULT_SETTINGS.body.template1;
@@ -1384,11 +1421,14 @@
                     ogTitle: document.getElementById("seoOgTitle").value,
                     ogDescription: document.getElementById("seoOgDescription").value,
                     ogImage: document.getElementById("seoOgImage").value,
-                    geo: {
-                        region: document.getElementById("geoRegion").value,
-                        placename: document.getElementById("geoPlacename").value,
-                        position: document.getElementById("geoPosition").value,
-                        language: document.getElementById("geoLanguage").value
+                    language: document.getElementById("geoLanguage").value,
+                    generative: {
+                        name: document.getElementById("geoName").value,
+                        summary: document.getElementById("geoSummary").value,
+                        audience: document.getElementById("geoAudience").value,
+                        services: textList(document.getElementById("geoServices").value),
+                        expertise: textList(document.getElementById("geoExpertise").value),
+                        profiles: textList(document.getElementById("geoProfiles").value)
                     }
                 }
             });
@@ -1433,11 +1473,14 @@
             document.getElementById("seoOgTitle").value = seo.ogTitle || "";
             document.getElementById("seoOgDescription").value = seo.ogDescription || "";
             document.getElementById("seoOgImage").value = seo.ogImage || "";
-            const geo = seo.geo || {};
-            document.getElementById("geoRegion").value = geo.region || "";
-            document.getElementById("geoPlacename").value = geo.placename || "";
-            document.getElementById("geoPosition").value = geo.position || "";
-            document.getElementById("geoLanguage").value = geo.language || "uk";
+            const generative = seo.generative || {};
+            document.getElementById("geoName").value = generative.name || "";
+            document.getElementById("geoSummary").value = generative.summary || "";
+            document.getElementById("geoAudience").value = generative.audience || "";
+            document.getElementById("geoServices").value = (generative.services || []).join("\n");
+            document.getElementById("geoExpertise").value = (generative.expertise || []).join("\n");
+            document.getElementById("geoProfiles").value = (generative.profiles || []).join("\n");
+            document.getElementById("geoLanguage").value = seo.language || generative.language || "uk";
             bodyPages = body.pages.map((page) => ({
                 name: page.name,
                 slug: page.slug,
@@ -1612,7 +1655,7 @@ ${header.telephoneEnabled && header.telephonePosition === "after" ? phoneMarkup 
   const bodyMarkup = renderBody(settings);
   const pageTitle = settings.body.template1.pages[0]?.name || "Сайт";
   const seo = settings.seo;
-  const geo = seo.geo;
+  const generative = seo.generative;
   const seoTitle = seo.title || pageTitle;
   const seoDescription = seo.description ? `\n  <meta name="description" content="${escapeHtml(seo.description)}">` : "";
   const seoKeywords = seo.keywords ? `\n  <meta name="keywords" content="${escapeHtml(seo.keywords)}">` : "";
@@ -1622,16 +1665,58 @@ ${header.telephoneEnabled && header.telephonePosition === "after" ? phoneMarkup 
   const ogDescription = seo.ogDescription || seo.description;
   const ogImage = seo.ogImage ? `\n  <meta property="og:image" content="${escapeHtml(seo.ogImage)}">` : "";
   const openGraph = `\n  <meta property="og:title" content="${escapeHtml(ogTitle)}">${ogDescription ? `\n  <meta property="og:description" content="${escapeHtml(ogDescription)}">` : ""}${ogImage}`;
-  const geoRegion = geo.region ? `\n  <meta name="geo.region" content="${escapeHtml(geo.region)}">` : "";
-  const geoPlacename = geo.placename ? `\n  <meta name="geo.placename" content="${escapeHtml(geo.placename)}">` : "";
-  const geoPosition = geo.position ? `\n  <meta name="geo.position" content="${escapeHtml(geo.position)}">\n  <meta name="ICBM" content="${escapeHtml(geo.position.replace(";", ", "))}">` : "";
-  const language = geo.language || "uk";
+  const language = generative.language || "uk";
+  const canonicalUrl = /^https?:\/\//i.test(seo.canonical) ? seo.canonical : "";
+  const schemaBaseUrl = canonicalUrl.replace(/#.*$/, "");
+  const organizationId = `${schemaBaseUrl}#organization`;
+  const structuredGraph = [];
+  if (generative.name) {
+      const organization = {
+          "@type": "Organization",
+          "@id": organizationId,
+          name: generative.name
+      };
+      if (generative.summary) organization.description = generative.summary;
+      if (canonicalUrl) organization.url = canonicalUrl;
+      if (generative.audience) organization.audience = { "@type": "Audience", audienceType: generative.audience };
+      const expertise = [...generative.services, ...generative.expertise];
+      if (expertise.length) organization.knowsAbout = expertise;
+      if (generative.profiles.length) organization.sameAs = generative.profiles;
+      if (generative.services.length) {
+          organization.hasOfferCatalog = {
+              "@type": "OfferCatalog",
+              name: "Послуги",
+              itemListElement: generative.services.map((service) => ({
+                  "@type": "Offer",
+                  itemOffered: { "@type": "Service", name: service }
+              }))
+          };
+      }
+      structuredGraph.push(organization);
+  }
+  if (generative.name || seo.title || canonicalUrl) {
+      const website = {
+          "@type": "WebSite",
+          "@id": `${schemaBaseUrl}#website`,
+          name: generative.name || seo.title || pageTitle
+      };
+      if (canonicalUrl) website.url = canonicalUrl;
+      if (language) website.inLanguage = language;
+      if (generative.name) website.publisher = { "@id": organizationId };
+      structuredGraph.push(website);
+  }
+  const generativeStructuredData = structuredGraph.length
+      ? `\n  <script type="application/ld+json">${JSON.stringify({
+          "@context": "https://schema.org",
+          "@graph": structuredGraph
+      }).replace(/</g, "\\u003c")}<\/script>`
+      : "";
   generatedSiteHtml = `<!doctype html>
 <html lang="${escapeHtml(language)}">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>${escapeHtml(seoTitle)}</title>${seoDescription}${seoKeywords}${seoRobots}${canonical}${openGraph}${geoRegion}${geoPlacename}${geoPosition}
+  <title>${escapeHtml(seoTitle)}</title>${seoDescription}${seoKeywords}${seoRobots}${canonical}${openGraph}${generativeStructuredData}
   <style>
     *, *::before, *::after { box-sizing: border-box; }
     html, body { min-height: 100%; margin: 0; }
