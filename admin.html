@@ -2208,10 +2208,10 @@ ${faqStructuredData}`;
             const url = URL.createObjectURL(blob);
             const anchor = document.createElement("a");
             anchor.href = url;
-            anchor.download = "site.html";
+            anchor.download = "index.html";
             anchor.click();
             URL.revokeObjectURL(url);
-            setStatus("Файл site.html завантажено.");
+            setStatus("Файл index.html завантажено.");
         });
         document.getElementById("downloadSettingsJson").addEventListener("click", () => {
             try {
