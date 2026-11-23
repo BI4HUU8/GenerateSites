@@ -155,6 +155,7 @@
         .faq-item-editor textarea { min-height: 96px; }
         .faq-item-editor .remove-link { grid-column: auto; grid-row: auto; justify-self: start; }
         .body-preview { display: grid; gap: 18px; }
+        .body-preview > .preview { position: relative; inset: auto; width: 100%; }
         .body-preview .generated-body__hero { min-height: 220px; }
         .body-preview .generated-body__about { padding: 28px; }
         .body-preview .generated-body__about-images { max-height: 260px; }
@@ -1570,13 +1571,49 @@
 
         function refreshBodyPreview() {
             const body = bodySettingsFromForm().template1;
-            bodyPreview.innerHTML = generateBodyHtml(body, activeBodyPageIndex, false);
+            bodyPreview.replaceChildren();
+            if (preview) {
+                const headerPreview = preview.cloneNode(true);
+                headerPreview.removeAttribute("id");
+                headerPreview.classList.remove("is-air");
+                headerPreview.style.position = "relative";
+                headerPreview.style.inset = "auto";
+                bodyPreview.appendChild(headerPreview);
+            }
             if (!body.enabled) {
-                bodyPreview.replaceChildren();
-                bodyPreview.textContent = "Генерацію блоків body вимкнено.";
+                const message = document.createElement("div");
+                message.textContent = "Генерацію блоків body вимкнено.";
+                bodyPreview.appendChild(message);
             } else if (!body.pages[activeBodyPageIndex].sections.some((section) => section.enabled)) {
-                bodyPreview.replaceChildren();
-                bodyPreview.textContent = "Додайте та налаштуйте блоки сторінки.";
+                const message = document.createElement("div");
+                message.textContent = "Додайте та налаштуйте блоки сторінки.";
+                bodyPreview.appendChild(message);
+            } else {
+                if (body.pages.length > 1) {
+                    const switcher = document.createElement("label");
+                    switcher.className = "generated-body__page-switcher";
+                    switcher.append("Сторінка ");
+                    const select = document.createElement("select");
+                    select.setAttribute("aria-label", "Вибрати сторінку");
+                    body.pages.forEach((page, pageIndex) => {
+                        const option = document.createElement("option");
+                        option.value = String(pageIndex);
+                        option.textContent = page.name;
+                        option.selected = pageIndex === activeBodyPageIndex;
+                        select.appendChild(option);
+                    });
+                    select.addEventListener("change", () => {
+                        saveActiveBodyPage();
+                        const pageIndex = Number(select.value);
+                        renderBodyPageEditor(pageIndex);
+                        refreshBodyPreview();
+                    });
+                    switcher.appendChild(select);
+                    bodyPreview.appendChild(switcher);
+                }
+                const pagePreview = document.createElement("div");
+                pagePreview.innerHTML = generateBodyHtml(body, activeBodyPageIndex, false);
+                bodyPreview.appendChild(pagePreview);
             }
         }
 
@@ -1989,14 +2026,7 @@ ${faqStructuredData}`;
         function renderBody(settings) {
             const body = settings.body.template1;
             const bodyMarkup = generateBodyHtml(body);
-            bodyPreview.innerHTML = generateBodyHtml(body, activeBodyPageIndex, false);
-            if (!body.enabled) {
-                bodyPreview.replaceChildren();
-                bodyPreview.textContent = "Генерацію блоків body вимкнено.";
-            } else if (!body.pages[activeBodyPageIndex]?.sections.some((section) => section.enabled)) {
-                bodyPreview.replaceChildren();
-                bodyPreview.textContent = "Додайте та налаштуйте блоки сторінки.";
-            }
+            refreshBodyPreview();
             return bodyMarkup;
         }
 
