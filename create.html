@@ -1,0 +1,482 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Додавання товару до бази</title>
+  <style>
+    :root {
+      --primary: #2563eb;
+      --primary-hover: #1d4ed8;
+      --bg: #f8fafc;
+      --card: #ffffff;
+      --border: #e2e8f0;
+      --text: #0f172a;
+      --text-muted: #64748b;
+      --danger: #ef4444;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background-color: var(--bg);
+      color: var(--text);
+      line-height: 1.5;
+      padding: 24px;
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      display: grid;
+      grid-template-columns: 1fr 420px;
+      gap: 24px;
+    }
+
+    @media (max-width: 960px) {
+      .container { grid-template-columns: 1fr; }
+    }
+
+    h1 { font-size: 1.5rem; margin-bottom: 20px; grid-column: 1 / -1; }
+    h2 { font-size: 1.1rem; margin-bottom: 16px; border-bottom: 1px solid var(--border); padding-bottom: 8px; }
+
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 20px;
+      margin-bottom: 20px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+    }
+
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+    .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; }
+
+    .form-group { margin-bottom: 14px; }
+    label { display: block; font-size: 0.875rem; font-weight: 500; margin-bottom: 4px; color: var(--text); }
+    .hint { font-size: 0.75rem; color: var(--text-muted); margin-top: 2px; }
+
+    input, select, textarea {
+      width: 100%;
+      padding: 8px 12px;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      font-size: 0.9rem;
+      font-family: inherit;
+    }
+    input:focus, select:focus, textarea:focus {
+      outline: none;
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+    }
+    textarea { resize: vertical; min-height: 70px; }
+
+    .checkbox-group {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-top: 8px;
+    }
+    .checkbox-group input { width: auto; }
+    .checkbox-group label { margin-bottom: 0; cursor: pointer; }
+
+    .dynamic-row {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 10px;
+      align-items: center;
+    }
+    .variant-box {
+      background: var(--bg);
+      padding: 12px;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      margin-bottom: 12px;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 8px 16px;
+      border-radius: 6px;
+      font-size: 0.875rem;
+      font-weight: 500;
+      cursor: pointer;
+      border: none;
+      transition: background 0.15s;
+    }
+    .btn-primary { background: var(--primary); color: #fff; width: 100%; padding: 12px; font-size: 1rem; }
+    .btn-primary:hover { background: var(--primary-hover); }
+    .btn-outline { background: transparent; border: 1px solid var(--border); color: var(--text); }
+    .btn-outline:hover { background: var(--bg); }
+    .btn-danger { background: transparent; color: var(--danger); padding: 6px 10px; }
+    .btn-danger:hover { background: #fee2e2; }
+
+    .sticky-panel { position: sticky; top: 24px; }
+    pre {
+      background: #1e293b;
+      color: #f8fafc;
+      padding: 16px;
+      border-radius: 8px;
+      font-size: 0.8rem;
+      overflow-x: auto;
+      max-height: 600px;
+      margin-top: 12px;
+    }
+  </style>
+</head>
+<body>
+
+<div class="container">
+  <h1>Додавання нового товару</h1>
+
+  <!-- ЛІВА КОЛОНКА: ФОРМА -->
+  <form id="productForm">
+    <!-- 1. Основна інформація -->
+    <div class="card">
+      <h2>1. Основна інформація</h2>
+      <div class="grid-2">
+        <div class="form-group">
+          <label>Назва товару (title) *</label>
+          <input type="text" id="title" required placeholder="Напр.: Базова бавовняна футболка">
+        </div>
+        <div class="form-group">
+          <label>URL-слаг (slug)</label>
+          <input type="text" id="slug" placeholder="Генерується автоматично">
+        </div>
+      </div>
+
+      <div class="grid-3">
+        <div class="form-group">
+          <label>ID товару</label>
+          <input type="text" id="id" placeholder="prod_1001">
+        </div>
+        <div class="form-group">
+          <label>Артикул (SKU) *</label>
+          <input type="text" id="sku" required placeholder="TSH-COT-BLK-M">
+        </div>
+        <div class="form-group">
+          <label>Штрихкод (GTIN / EAN)</label>
+          <input type="text" id="gtin" placeholder="4820000123456">
+        </div>
+      </div>
+
+      <div class="grid-2">
+        <div class="form-group">
+          <label>Бренд (brand)</label>
+          <input type="text" id="brand" placeholder="LocalBrand">
+        </div>
+        <div class="form-group">
+          <label>Категорія (через кому для ієрархії)</label>
+          <input type="text" id="categoryPath" placeholder="Одяг та взуття, Чоловічий одяг, Футболки">
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label>Короткий опис (short)</label>
+        <input type="text" id="descShort" placeholder="Щільна футболка вільного крою зі 100% бавовни.">
+      </div>
+      <div class="form-group">
+        <label>Повний опис (full)</label>
+        <textarea id="descFull" placeholder="Детальний опис, особливості догляду, склад..."></textarea>
+      </div>
+    </div>
+
+    <!-- 2. Ціни та склад -->
+    <div class="card">
+      <h2>2. Ціни та складський облік</h2>
+      <div class="grid-3">
+        <div class="form-group">
+          <label>Базова ціна *</label>
+          <input type="number" step="0.01" id="basePrice" required placeholder="850.00">
+        </div>
+        <div class="form-group">
+          <label>Акційна ціна</label>
+          <input type="number" step="0.01" id="salePrice" placeholder="720.00">
+        </div>
+        <div class="form-group">
+          <label>Собівартість</label>
+          <input type="number" step="0.01" id="costPrice" placeholder="350.00">
+        </div>
+      </div>
+
+      <div class="grid-3">
+        <div class="form-group">
+          <label>Статус наявності</label>
+          <select id="invStatus">
+            <option value="in_stock">В наявності (in_stock)</option>
+            <option value="out_of_stock">Немає в наявності (out_of_stock)</option>
+            <option value="preorder">Передзамовлення (preorder)</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Кількість на складі</label>
+          <input type="number" id="invQty" value="10">
+        </div>
+        <div class="form-group">
+          <label>Податок (%)</label>
+          <input type="number" id="taxRate" value="0">
+        </div>
+      </div>
+
+      <div class="grid-2">
+        <div class="checkbox-group">
+          <input type="checkbox" id="trackQty" checked>
+          <label for="trackQty">Відстежувати залишки</label>
+        </div>
+        <div class="checkbox-group">
+          <input type="checkbox" id="allowBackorder">
+          <label for="allowBackorder">Дозволити замовлення при 0 залишку</label>
+        </div>
+      </div>
+    </div>
+
+    <!-- 3. Доставка та медіа -->
+    <div class="card">
+      <h2>3. Логістика та медіафайли</h2>
+      <div class="grid-3" style="grid-template-columns: 1fr 1fr 1fr 1fr;">
+        <div class="form-group">
+          <label>Вага (грами)</label>
+          <input type="number" id="weight" placeholder="220">
+        </div>
+        <div class="form-group">
+          <label>Довжина (см)</label>
+          <input type="number" id="dimL" placeholder="30">
+        </div>
+        <div class="form-group">
+          <label>Ширина (см)</label>
+          <input type="number" id="dimW" placeholder="25">
+        </div>
+        <div class="form-group">
+          <label>Висота (см)</label>
+          <input type="number" id="dimH" placeholder="3">
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label>Головне фото (URL)</label>
+        <input type="url" id="mainImage" placeholder="https://example.com">
+      </div>
+      <div class="form-group">
+        <label>Додаткові фото (кожне з нового рядка)</label>
+        <textarea id="galleryImages" placeholder="https://example.com"></textarea>
+      </div>
+    </div>
+
+    <!-- 4. Характеристики (Attributes) -->
+    <div class="card">
+      <h2>4. Характеристики товару (Attributes)</h2>
+      <div id="attributesContainer">
+        <div class="dynamic-row">
+          <input type="text" placeholder="Ключ (напр. color)" value="color" class="attr-key">
+          <input type="text" placeholder="Значення (напр. Чорний)" class="attr-val">
+          <button type="button" class="btn btn-danger" onclick="this.parentElement.remove()">✕</button>
+        </div>
+        <div class="dynamic-row">
+          <input type="text" placeholder="Ключ (напр. material)" value="material" class="attr-key">
+          <input type="text" placeholder="Значення (напр. 100% бавовна)" class="attr-val">
+          <button type="button" class="btn btn-danger" onclick="this.parentElement.remove()">✕</button>
+        </div>
+      </div>
+      <button type="button" class="btn btn-outline" onclick="addAttributeRow()">+ Додати характеристику</button>
+    </div>
+
+    <!-- 5. Варіанти товару (Variants) -->
+    <div class="card">
+      <h2>5. Варіанти (розміри, кольори тощо)</h2>
+      <div id="variantsContainer"></div>
+      <button type="button" class="btn btn-outline" onclick="addVariantRow()">+ Додати варіант</button>
+    </div>
+
+       <!-- 6. Теги та статус -->
+    <div class="card">
+      <h2>6. Теги та публікація</h2>
+      <div class="form-group">
+        <label>Теги (через кому)</label>
+        <input type="text" id="tags" placeholder="база, бавовна, новинка">
+      </div>
+      <div class="checkbox-group">
+        <input type="checkbox" id="isActive" checked>
+        <label for="isActive">Товар активний (відображається в каталозі)</label>
+      </div>
+    </div>
+
+    <button type="submit" class="btn btn-primary">Згенерувати JSON товару</button>
+  </form>
+
+  <div>
+    <div class="card sticky-panel">
+      <div style="display: flex; justify-content: space-between; align-items: center;">
+        <h2 style="border: none; margin: 0; padding: 0;">Готовий JSON</h2>
+        <button type="button" class="btn btn-outline" id="copyBtn" onclick="copyJSON()">Копіювати</button>
+      </div>
+      <p class="hint">Заповніть форму та натисніть кнопку внизу, щоб отримати об'єкт.</p>
+      <pre id="jsonOutput">{
+  "status": "Очікування даних форми..."
+}</pre>
+    </div>
+  </div>
+</div>
+
+<script>
+  // Генерація унікального ID при завантаженні
+  document.getElementById('id').value = 'prod_' + Math.floor(1000 + Math.random() * 9000);
+
+  // Автоматична транслітерація для slug
+  const cyrToLat = {'а':'a','б':'b','в':'v','г':'h','ґ':'g','д':'d','е':'e','є':'ye','ж':'zh','з':'z','и':'y','і':'i','ї':'yi','й':'y','к':'k','л':'l','м':'m','н':'n','о':'o','п':'p','р':'r','с':'s','т':'t','у':'u','ф':'f','х':'kh','ц':'ts','ч':'ch','ш':'sh','щ':'shch','ь':'','ю':'yu','я':'ya'};
+  document.getElementById('title').addEventListener('input', function(e) {
+    const slug = e.target.value.toLowerCase().split('').map(char => cyrToLat[char] || char).join('')
+      .replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
+    document.getElementById('slug').value = slug;
+  });
+
+  // Додавання рядка атрибутів
+  function addAttributeRow() {
+    const div = document.createElement('div');
+    div.className = 'dynamic-row';
+    div.innerHTML = `
+      <input type="text" placeholder="Ключ (напр. size)" class="attr-key">
+      <input type="text" placeholder="Значення (напр. L)" class="attr-val">
+      <button type="button" class="btn btn-danger" onclick="this.parentElement.remove()">✕</button>
+    `;
+    document.getElementById('attributesContainer').appendChild(div);
+  }
+
+  // Додавання блоку варіанта
+  let variantCounter = 1;
+  function addVariantRow() {
+    const div = document.createElement('div');
+    div.className = 'variant-box';
+    div.innerHTML = `
+      <div style="display:flex; justify-content:space-between; margin-bottom:8px;">
+        <strong>Варіант #${variantCounter++}</strong>
+        <button type="button" class="btn btn-danger" style="padding:2px 6px;" onclick="this.closest('.variant-box').remove()">Видалити</button>
+      </div>
+      <div class="grid-3">
+        <div class="form-group">
+          <label>SKU варіанта</label>
+          <input type="text" class="var-sku" placeholder="TSH-BLK-L">
+        </div>
+        <div class="form-group">
+          <label>Ціна (якщо інша)</label>
+          <input type="number" step="0.01" class="var-price" placeholder="Порожньо = базова">
+        </div>
+        <div class="form-group">
+          <label>Залишок (шт)</label>
+          <input type="number" class="var-qty" value="5">
+        </div>
+      </div>
+      <div class="grid-2">
+        <div class="form-group" style="margin-bottom:0;">
+          <label>Колір</label>
+          <input type="text" class="var-color" placeholder="Чорний">
+        </div>
+        <div class="form-group" style="margin-bottom:0;">
+          <label>Розмір / Об'єм</label>
+          <input type="text" class="var-size" placeholder="L">
+        </div>
+      </div>
+    `;
+    document.getElementById('variantsContainer').appendChild(div);
+  }
+
+  // Збір даних форми у JSON
+  document.getElementById('productForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+
+    const catRaw = document.getElementById('categoryPath').value.split(',').map(s => s.trim()).filter(Boolean);
+    const gallery = document.getElementById('galleryImages').value.split('\n').map(s => s.trim()).filter(Boolean);
+
+    const attributes = {};
+    document.querySelectorAll('#attributesContainer .dynamic-row').forEach(row => {
+      const k = row.querySelector('.attr-key').value.trim();
+      const v = row.querySelector('.attr-val').value.trim();
+      if (k && v) attributes[k] = v;
+    });
+
+    const variants = [];
+    const prodId = document.getElementById('id').value.trim() || 'prod_1001';
+    document.querySelectorAll('#variantsContainer .variant-box').forEach((box, idx) => {
+      const vSku = box.querySelector('.var-sku').value.trim();
+      const vPrice = box.querySelector('.var-price').value;
+      const vQty = parseInt(box.querySelector('.var-qty').value) || 0;
+      const vColor = box.querySelector('.var-color').value.trim();
+      const vSize = box.querySelector('.var-size').value.trim();
+
+      const varAttrs = {};
+      if (vColor) varAttrs.color = vColor;
+      if (vSize) varAttrs.size = vSize;
+
+      variants.push({
+        variant_id: `var_${prodId.replace('prod_', '')}_${idx + 1}`,
+        sku: vSku || `${document.getElementById('sku').value}-V${idx + 1}`,
+        attributes: varAttrs,
+        price_override: vPrice ? parseFloat(vPrice) : null,
+        quantity: vQty
+      });
+    });
+
+    const productObj = {
+      id: prodId,
+      sku: document.getElementById('sku').value.trim(),
+      gtin: document.getElementById('gtin').value.trim() || null,
+      title: document.getElementById('title').value.trim(),
+      slug: document.getElementById('slug').value.trim(),
+      brand: document.getElementById('brand').value.trim() || null,
+      category: {
+        id: "cat_" + Math.floor(10 + Math.random() * 90),
+        name: catRaw.length ? catRaw[catRaw.length - 1] : "Загальна",
+        path: catRaw
+      },
+      description: {
+        short: document.getElementById('descShort').value.trim(),
+        full: document.getElementById('descFull').value.trim()
+      },
+      pricing: {
+        base_price: parseFloat(document.getElementById('basePrice').value) || 0,
+        sale_price: document.getElementById('salePrice').value ? parseFloat(document.getElementById('salePrice').value) : null,
+        cost_price: document.getElementById('costPrice').value ? parseFloat(document.getElementById('costPrice').value) : null,
+        tax_rate: parseFloat(document.getElementById('taxRate').value) || 0
+      },
+      inventory: {
+        status: document.getElementById('invStatus').value,
+        quantity: parseInt(document.getElementById('invQty').value) || 0,
+        track_quantity: document.getElementById('trackQty').checked,
+        allow_backorder: document.getElementById('allowBackorder').checked
+      },
+      shipping: {
+        weight_grams: parseInt(document.getElementById('weight').value) || 0,
+        dimensions_cm: {
+          length: parseFloat(document.getElementById('dimL').value) || 0,
+          width: parseFloat(document.getElementById('dimW').value) || 0,
+          height: parseFloat(document.getElementById('dimH').value) || 0
+        }
+      },
+      media: {
+        main_image: document.getElementById('mainImage').value.trim() || null,
+        gallery: gallery
+      },
+      attributes: attributes,
+      variants: variants,
+      tags: document.getElementById('tags').value.split(',').map(s => s.trim()).filter(Boolean),
+      is_active: document.getElementById('isActive').checked,
+      created_at: new Date().toISOString()
+    };
+
+    document.getElementById('jsonOutput').textContent = JSON.stringify(productObj, null, 2);
+  });
+
+  // Копіювання в буфер обміну
+  function copyJSON() {
+    const text = document.getElementById('jsonOutput').textContent;
+    navigator.clipboard.writeText(text).then(() => {
+      const btn = document.getElementById('copyBtn');
+      btn.textContent = 'Скопійовано!';
+      setTimeout(() => btn.textContent = 'Копіювати', 2000);
+    });
+  }
+</script>
+
+</body>
+</html>
