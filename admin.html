@@ -163,7 +163,7 @@
         <section class="panel" aria-labelledby="body-settings-title">
             <h2 id="body-settings-title">Блоки сайту</h2>
             <details class="settings-details" open>
-                <summary>Кольори</summary>
+                <summary>Кольори сайту</summary>
                 <div class="settings-details-content body-colors">
                     <label class="field" for="bodyBackground">Фон сайту
                         <input id="bodyBackground" type="color">
@@ -265,36 +265,5 @@
 
 
     <script src="admin.js"></script>
-    
-
-<script>
-  document.addEventListener("DOMContentLoaded", function () {
-    const STORAGE_KEY = "site_builder_storage_consent";
-    const banner = document.getElementById("cookie-banner");
-    const acceptBtn = document.getElementById("cookie-accept");
-    const declineBtn = document.getElementById("cookie-decline");
-
-    if (!localStorage.getItem(STORAGE_KEY)) {
-      banner.style.display = "block";
-    }
-
-    function handleConsent(level) {
-      localStorage.setItem(STORAGE_KEY, level);
-      banner.style.display = "none";
-
-      if (level === "all") {
-        // Місце для ініціалізації аналітики (наприклад, Google Analytics / Plausible)
-        console.log("Увімкнено локальне збереження + аналітику");
-      } else {
-        // Працює лише локальне збереження налаштувань генератора
-         console.log("Увімкнено лише локальне збереження налаштувань");
-      }
-    }
-
-    acceptBtn.addEventListener("click", () => handleConsent("all"));
-    declineBtn.addEventListener("click", () => handleConsent("local_only"));
-  });
-</script>
-    
 </body>
 </html>

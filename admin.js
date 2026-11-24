@@ -266,7 +266,38 @@
                         }
                         return String(value || "").trim();
                     };
-                    const sectionBase = { type: section.type, enabled: section.enabled !== false };
+                    const sectionColorsInput = section.colors === undefined ? {} : section.colors;
+                    if (!sectionColorsInput || typeof sectionColorsInput !== "object" || Array.isArray(sectionColorsInput)) {
+                        throw new Error(`${blockLabel}: colors має бути об’єктом.`);
+                    }
+                    const colors = {};
+                    ["background", "text"].forEach((key) => {
+                        const color = sectionColorsInput[key];
+                        if (color === undefined) return;
+                        if (typeof color !== "string" || !/^#[0-9a-f]{6}$/i.test(color)) {
+                            throw new Error(`${blockLabel}: колір «${key}» має бути в HEX-форматі #RRGGBB.`);
+                        }
+                        colors[key] = color;
+                    });
+                    const textAlignInput = section.textAlign === undefined ? {} : section.textAlign;
+                    if (!textAlignInput || typeof textAlignInput !== "object" || Array.isArray(textAlignInput)) {
+                        throw new Error(`${blockLabel}: textAlign має бути об’єктом.`);
+                    }
+                    const textAlign = {};
+                    ["subtitle", "text", "intro", "items"].forEach((key) => {
+                        const alignment = textAlignInput[key];
+                        if (alignment === undefined) return;
+                        if (!["left", "center", "right"].includes(alignment)) {
+                            throw new Error(`${blockLabel}: вирівнювання «${key}» має бути left, center або right.`);
+                        }
+                        textAlign[key] = alignment;
+                    });
+                    const sectionBase = {
+                        type: section.type,
+                        enabled: section.enabled !== false,
+                        ...(Object.keys(colors).length ? { colors } : {}),
+                        ...(Object.keys(textAlign).length ? { textAlign } : {})
+                    };
                     if (section.type === "hero") {
                         const image = safeUrl(String(section.backgroundImage || section.image || ""), `Фонове зображення (${blockLabel})`);
                         const buttonUrl = safeUrl(text(section.buttonUrl, "URL кнопки"), `URL кнопки (${blockLabel})`);
@@ -326,9 +357,14 @@
                                 if (!item || typeof item !== "object") {
                                     throw new Error(`Питання ${itemIndex + 1} (${blockLabel}) має бути об’єктом.`);
                                 }
+                                const answerAlign = item.answerAlign === undefined ? "left" : item.answerAlign;
+                                if (!["left", "center", "right"].includes(answerAlign)) {
+                                    throw new Error(`Вирівнювання відповіді ${itemIndex + 1} (${blockLabel}) має бути left, center або right.`);
+                                }
                                 return {
                                     question: text(item.question, "запитання"),
-                                    answer: text(item.answer, "відповідь")
+                                    answer: text(item.answer, "відповідь"),
+                                    ...(answerAlign !== "left" ? { answerAlign } : {})
                                 };
                             }).filter((item) => item.question || item.answer)
                         };
@@ -464,16 +500,59 @@
             });
         }
 
-        function addBodyField(section, key, label, value, multiline = false, hint = "") {
-            const field = document.createElement("label");
+        function addTextAlignmentToolbar(field, input, key, alignment = "left") {
+            const currentAlignment = ["left", "center", "right"].includes(alignment) ? alignment : "left";
+            input.dataset.textAlignKey = key;
+            input.dataset.textAlign = currentAlignment;
+            const toolbar = document.createElement("div");
+            toolbar.className = "text-align-toolbar";
+            toolbar.setAttribute("role", "group");
+            toolbar.setAttribute("aria-label", `Вирівнювання тексту: ${key}`);
+            const caption = document.createElement("span");
+            caption.textContent = "Текст:";
+            toolbar.appendChild(caption);
+            [
+                ["left", "Ліворуч"],
+                ["center", "По центру"],
+                ["right", "Праворуч"]
+            ].forEach(([value, label]) => {
+                const button = document.createElement("button");
+                button.type = "button";
+                button.className = "text-align-button";
+                button.textContent = label;
+                button.setAttribute("aria-label", label);
+                button.setAttribute("aria-pressed", String(value === currentAlignment));
+                button.addEventListener("click", () => {
+                    input.dataset.textAlign = value;
+                    toolbar.querySelectorAll(".text-align-button").forEach((option) => {
+                        option.setAttribute("aria-pressed", String(option === button));
+                    });
+                    refreshBodyPreview();
+                    scheduleAutosave();
+                });
+                toolbar.appendChild(button);
+            });
+            field.appendChild(toolbar);
+        }
+
+        function addBodyField(section, key, label, value, multiline = false, hint = "", textAlignment = "left") {
+            const field = document.createElement("div");
             field.className = "field";
-            field.textContent = label;
+            const fieldLabel = document.createElement("label");
             const input = document.createElement(multiline ? "textarea" : "input");
             if (!multiline) input.type = "text";
+            const fieldIndex = document.querySelectorAll("#bodySections .field").length +
+                section.querySelectorAll(".field").length;
+            input.id = `body-field-${activeBodyPageIndex}-${fieldIndex}`;
             input.dataset.key = key;
             input.value = value || "";
             if (hint) input.placeholder = hint;
-            field.appendChild(input);
+            fieldLabel.htmlFor = input.id;
+            fieldLabel.textContent = label;
+            field.append(fieldLabel, input);
+            if (multiline && key !== "images") {
+                addTextAlignmentToolbar(field, input, key, textAlignment);
+            }
             section.appendChild(field);
         }
 
@@ -490,14 +569,17 @@
             questionInput.placeholder = "Наприклад, чи є термінове обслуговування?";
             questionField.appendChild(questionInput);
 
-            const answerField = document.createElement("label");
+            const answerField = document.createElement("div");
             answerField.className = "field";
-            answerField.textContent = "Відповідь";
+            const answerLabel = document.createElement("label");
+            answerLabel.className = "field-label";
             const answerInput = document.createElement("textarea");
             answerInput.dataset.faqAnswer = "true";
             answerInput.value = item.answer || "";
             answerInput.placeholder = "Введіть відповідь";
-            answerField.appendChild(answerInput);
+            answerLabel.append("Відповідь", answerInput);
+            answerField.appendChild(answerLabel);
+            addTextAlignmentToolbar(answerField, answerInput, "faq-answer", item.answerAlign);
 
             const removeButton = document.createElement("button");
             removeButton.className = "remove-link";
@@ -512,6 +594,38 @@
             });
             row.append(questionField, answerField, removeButton);
             container.appendChild(row);
+        }
+
+        function addSectionColorSettings(container, sectionData) {
+            const details = document.createElement("details");
+            details.className = "section-color-settings";
+            const summary = document.createElement("summary");
+            summary.textContent = "Кольори блоку";
+            const fields = document.createElement("div");
+            fields.className = "section-color-fields";
+            [
+                ["background", "Фон", "bodyBlockBackground"],
+                ["text", "Текст", "bodyTextColor"]
+            ].forEach(([key, labelText, fallbackId]) => {
+                const label = document.createElement("label");
+                label.className = "color-field";
+                const caption = document.createElement("span");
+                caption.textContent = labelText;
+                const input = document.createElement("input");
+                input.type = "color";
+                input.dataset.sectionColor = key;
+                input.dataset.colorOverride = String(Boolean(sectionData.colors?.[key]));
+                input.value = sectionData.colors?.[key] || document.getElementById(fallbackId).value;
+                input.setAttribute("aria-label", `${labelText} блоку`);
+                input.addEventListener("input", () => {
+                    input.dataset.colorOverride = "true";
+                    refreshBodyPreview();
+                });
+                label.append(caption, input);
+                fields.appendChild(label);
+            });
+            details.append(summary, fields);
+            container.appendChild(details);
         }
 
         function addBodySection(sectionData = { type: "hero" }) {
@@ -583,25 +697,26 @@
             settings.className = "section-settings";
             settings.hidden = true;
             card.appendChild(settings);
+            addSectionColorSettings(settings, sectionData);
 
             if (sectionData.type === "hero") {
                 addBodyField(settings, "eyebrow", "Надзаголовок", sectionData.eyebrow);
                 addBodyField(settings, "title", "Заголовок", sectionData.title);
-                addBodyField(settings, "subtitle", "Опис", sectionData.subtitle, true);
+                addBodyField(settings, "subtitle", "Опис", sectionData.subtitle, true, "", sectionData.textAlign?.subtitle);
                 addBodyField(settings, "backgroundImage", "URL фонового зображення", sectionData.backgroundImage || sectionData.image, false, "/images/hero.jpg");
                 addBodyField(settings, "buttonLabel", "Текст кнопки", sectionData.buttonLabel);
                 addBodyField(settings, "buttonUrl", "URL кнопки", sectionData.buttonUrl, false, "#contact");
             } else if (sectionData.type === "about") {
                 addBodyField(settings, "eyebrow", "Надзаголовок", sectionData.eyebrow);
                 addBodyField(settings, "title", "Заголовок", sectionData.title);
-                addBodyField(settings, "text", "Опис", sectionData.text || sectionData.description, true);
+                addBodyField(settings, "text", "Опис", sectionData.text || sectionData.description, true, "", sectionData.textAlign?.text);
                 addBodyField(settings, "images", "URL зображень (кожне з нового рядка)", (sectionData.images || []).join("\n"), true);
-                addBodyField(settings, "items", "Пункти списку (кожен з нового рядка)", (sectionData.items || []).join("\n"), true);
+                addBodyField(settings, "items", "Пункти списку (кожен з нового рядка)", (sectionData.items || []).join("\n"), true, "", sectionData.textAlign?.items);
                 addBodyField(settings, "buttonLabel", "Текст кнопки", sectionData.buttonLabel);
                 addBodyField(settings, "buttonUrl", "URL кнопки", sectionData.buttonUrl, false, "#contact");
             } else if (sectionData.type === "contact") {
                 addBodyField(settings, "title", "Заголовок", sectionData.title || "Contact");
-                addBodyField(settings, "intro", "Опис", sectionData.intro, true);
+                addBodyField(settings, "intro", "Опис", sectionData.intro, true, "", sectionData.textAlign?.intro);
                 addBodyField(settings, "phone", "Телефон", sectionData.phone);
                 addBodyField(settings, "email", "Email", sectionData.email);
                 addBodyField(settings, "address", "Адреса", sectionData.address);
@@ -627,7 +742,8 @@
             } else {
                 addBodyField(settings, "title", "Заголовок", sectionData.title);
                 addBodyField(settings, "items", "Переваги: назва | опис | URL іконки (кожна з нового рядка)",
-                    (sectionData.items || []).map((item) => [item.title, item.description, item.icon].join(" | ")).join("\n"), true);
+                    (sectionData.items || []).map((item) => [item.title, item.description, item.icon].join(" | ")).join("\n"),
+                    true, "", sectionData.textAlign?.items);
             }
             settings.addEventListener("input", () => refreshBodyPreview());
             bodySections.appendChild(card);
@@ -648,6 +764,21 @@
                         section[key] = value;
                     }
                 });
+                const colors = {};
+                card.querySelectorAll("[data-section-color]").forEach((input) => {
+                    if (input.dataset.colorOverride === "true") {
+                        colors[input.dataset.sectionColor] = input.value;
+                    }
+                });
+                if (Object.keys(colors).length) section.colors = colors;
+                const textAlign = {};
+                card.querySelectorAll("[data-text-align-key]").forEach((input) => {
+                    const key = input.dataset.textAlignKey;
+                    if (key !== "faq-answer" && input.dataset.textAlign !== "left") {
+                        textAlign[key] = input.dataset.textAlign;
+                    }
+                });
+                if (Object.keys(textAlign).length) section.textAlign = textAlign;
                 if (section.type === "features") {
                     section.items = section.items.map((line) => {
                         const [title = "", description = "", icon = ""] = line.split("|").map((part) => part.trim());
@@ -655,10 +786,16 @@
                     });
                 }
                 if (section.type === "faq") {
-                    section.items = [...card.querySelectorAll(".faq-item-editor")].map((row) => ({
-                        question: row.querySelector("[data-faq-question]").value.trim(),
-                        answer: row.querySelector("[data-faq-answer]").value.trim()
-                    })).filter((item) => item.question || item.answer);
+                    section.items = [...card.querySelectorAll(".faq-item-editor")].map((row) => {
+                        const answerInput = row.querySelector("[data-faq-answer]");
+                        return {
+                            question: row.querySelector("[data-faq-question]").value.trim(),
+                            answer: answerInput.value.trim(),
+                            ...(answerInput.dataset.textAlign !== "left"
+                                ? { answerAlign: answerInput.dataset.textAlign }
+                                : {})
+                        };
+                    }).filter((item) => item.question || item.answer);
                 }
                 return section;
             });
@@ -1232,6 +1369,11 @@ ${bodyMarkup}
   const markup = pages.map((page, renderIndex) => {
       const sections = page.sections.filter((section) => section.enabled);
       const sectionMarkup = sections.map((section) => {
+      const sectionBackground = section.colors?.background || body.blockBackground;
+      const sectionText = section.colors?.text || body.textColor;
+      const sectionTextStyle = section.colors?.text ? `--section-text-color:${sectionText};` : "";
+      const blockStyle = `background:${hexToRgba(sectionBackground, body.blockOpacity)};color:${sectionText};${sectionTextStyle}backdrop-filter:blur(${body.blockBlur}px);`;
+      const textAlignment = (key) => section.textAlign?.[key] || "left";
       if (section.type === "hero") {
           const image = section.backgroundImage
               ? `\n  <img class="generated-body__hero-image" src="${escapeHtml(section.backgroundImage)}" alt="" loading="lazy">`
@@ -1243,9 +1385,9 @@ ${bodyMarkup}
               ? `\n    <p class="generated-body__eyebrow">${escapeHtml(section.eyebrow)}</p>`
               : "";
           const subtitle = section.subtitle
-              ? `\n    <p class="generated-body__description">${escapeHtml(section.subtitle)}</p>`
+              ? `\n    <p class="generated-body__description" style="text-align:${textAlignment("subtitle")};">${escapeHtml(section.subtitle)}</p>`
               : "";
-          return `<section class="generated-body__hero" style="background:${hexToRgba(body.blockBackground, body.blockOpacity)};color:${body.textColor};backdrop-filter:blur(${body.blockBlur}px);">${image}
+          return `<section class="generated-body__hero" style="${blockStyle}">${image}
   <div class="generated-body__hero-overlay"></div>
   <div class="generated-body__hero-content">${eyebrow}
     <h1>${escapeHtml(section.title)}</h1>${subtitle}${button}
@@ -1266,15 +1408,15 @@ ${bodyMarkup}
               ? `\n    <p class="generated-body__eyebrow">${escapeHtml(section.eyebrow)}</p>`
               : "";
           const text = section.text
-              ? `\n    <p class="generated-body__description">${escapeHtml(section.text)}</p>`
+              ? `\n    <p class="generated-body__description" style="text-align:${textAlignment("text")};">${escapeHtml(section.text)}</p>`
               : "";
           const imageMarkup = images
               ? `\n  <div class="generated-body__about-images">\n${images}\n  </div>`
               : "";
           const list = bullets
-              ? `\n    <ul class="generated-body__checklist">\n${bullets}\n    </ul>`
+              ? `\n    <ul class="generated-body__checklist" style="text-align:${textAlignment("items")};">\n${bullets}\n    </ul>`
               : "";
-          return `<section class="generated-body__about" id="about" style="background:${hexToRgba(body.blockBackground, body.blockOpacity)};color:${body.textColor};backdrop-filter:blur(${body.blockBlur}px);">${imageMarkup}
+          return `<section class="generated-body__about" id="about" style="${blockStyle}">${imageMarkup}
   <div class="generated-body__about-content">${eyebrow}
     <h2>${escapeHtml(section.title)}</h2>${text}${list}${button}
   </div>
@@ -1296,9 +1438,9 @@ ${bodyMarkup}
                   : ""
           ].filter(Boolean).join("\n");
           const intro = section.intro
-              ? `\n    <p class="generated-body__description">${escapeHtml(section.intro)}</p>`
+              ? `\n    <p class="generated-body__description" style="text-align:${textAlignment("intro")};">${escapeHtml(section.intro)}</p>`
               : "";
-          return `<section class="generated-body__contact" id="contact" style="background:${hexToRgba(body.blockBackground, body.blockOpacity)};color:${body.textColor};backdrop-filter:blur(${body.blockBlur}px);">
+          return `<section class="generated-body__contact" id="contact" style="${blockStyle}">
   <div class="generated-body__contact-inner">
     <p class="generated-body__eyebrow">Contact</p>
     <h2>${escapeHtml(section.title)}</h2>${intro}
@@ -1309,9 +1451,9 @@ ${bodyMarkup}
       if (section.type === "faq") {
           const items = section.items.map((item) => `<details class="generated-body__faq-item">
   <summary>${escapeHtml(item.question)}<span aria-hidden="true"></span></summary>
-  ${item.answer ? `<p>${escapeHtml(item.answer)}</p>` : ""}
+  ${item.answer ? `<p style="text-align:${item.answerAlign || "left"};">${escapeHtml(item.answer)}</p>` : ""}
 </details>`).join("\n");
-          return `<section class="generated-body__faq" style="background:${hexToRgba(body.blockBackground, body.blockOpacity)};color:${body.textColor};backdrop-filter:blur(${body.blockBlur}px);">
+          return `<section class="generated-body__faq" style="${blockStyle}">
   <h2>${escapeHtml(section.title)}</h2>
   <div class="generated-body__faq-list">
 ${items}
@@ -1327,9 +1469,9 @@ ${items}
       <p>${escapeHtml(item.description)}</p>
     </article>`;
       }).join("\n");
-      return `<section class="generated-body__features" style="background:${hexToRgba(body.blockBackground, body.blockOpacity)};color:${body.textColor};backdrop-filter:blur(${body.blockBlur}px);">
+      return `<section class="generated-body__features" style="${blockStyle}">
   <h2>${escapeHtml(section.title)}</h2>
-  <div class="generated-body__feature-grid">\n${items}\n  </div>
+  <div class="generated-body__feature-grid" style="text-align:${textAlignment("items")};">\n${items}\n  </div>
 </section>`;
       }).join("\n\n");
       const pageHidden = onlyPageIndex === null && renderIndex > 0 ? " hidden" : "";
@@ -1398,8 +1540,8 @@ if (!showGeneratedPage(decodeURIComponent(location.hash.slice(1)))) {
 .generated-body__hero-overlay { background: linear-gradient(90deg, rgba(0,0,0,.58), rgba(0,0,0,.18)); }
 .generated-body__hero-content { position: relative; z-index: 1; width: min(100%, 560px); margin-inline: auto; }
 .generated-body__hero h1, .generated-body__about h2, .generated-body__contact h2, .generated-body__features h2 { margin: 0 0 16px; font-size: clamp(1.8rem, 3.5vw, 3rem); line-height: 1.12; }
-.generated-body__eyebrow { margin: 0 0 12px; color: var(--body-text-gray); font-size: .75rem; font-weight: 800; letter-spacing: .14em; text-transform: uppercase; }
-.generated-body__description { margin: 0 0 24px; max-width: 620px; color: var(--body-text-gray); line-height: 1.65; }
+.generated-body__eyebrow { margin: 0 0 12px; color: var(--section-text-color, var(--body-text-gray)); font-size: .75rem; font-weight: 800; letter-spacing: .14em; text-transform: uppercase; }
+.generated-body__description { margin: 0 0 24px; max-width: 620px; color: var(--section-text-color, var(--body-text-gray)); line-height: 1.65; }
 .generated-body__button { display: inline-flex; align-items: center; justify-content: center; min-height: 44px; padding: 11px 22px; border-radius: 999px; background: #28578f; color: #fff; font-size: .8rem; font-weight: 800; text-decoration: none; text-transform: uppercase; }
 .generated-body__hero .generated-body__button { background: #fff; color: #142238; }
 .generated-body__about { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); align-items: center; gap: clamp(28px, 6vw, 76px); padding: clamp(32px, 7vw, 88px); }
@@ -1412,7 +1554,7 @@ if (!showGeneratedPage(decodeURIComponent(location.hash.slice(1)))) {
 .generated-body__contact-inner { max-width: 1120px; margin: 0 auto; }
 .generated-body__contact-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 220px), 1fr)); gap: 14px; margin-top: 28px; }
 .generated-body__contact-card { display: grid; gap: 9px; min-height: 104px; padding: 20px; border: 1px solid rgba(20,34,56,.12); border-radius: 12px; background: rgba(255,255,255,.78); color: inherit; text-decoration: none; overflow-wrap: anywhere; }
-.generated-body__contact-card span { color: #657087; font-size: .78rem; font-weight: 750; letter-spacing: .08em; text-transform: uppercase; }
+.generated-body__contact-card span { color: var(--section-text-color, #657087); font-size: .78rem; font-weight: 750; letter-spacing: .08em; text-transform: uppercase; }
 .generated-body__contact-card strong { font-size: 1rem; line-height: 1.5; }
 .generated-body__checklist { display: grid; gap: 12px; margin: 24px 0; padding: 0; list-style: none; }
 .generated-body__checklist li { line-height: 1.5; }
@@ -1427,7 +1569,7 @@ if (!showGeneratedPage(decodeURIComponent(location.hash.slice(1)))) {
 .generated-body__faq-item summary span::before, .generated-body__faq-item summary span::after { content: ""; position: absolute; top: 9px; left: 6px; width: 8px; height: 2px; background: #28578f; }
 .generated-body__faq-item summary span::after { transform: rotate(90deg); transition: transform .2s ease; }
 .generated-body__faq-item[open] summary span::after { transform: rotate(0); }
-.generated-body__faq-item p { margin: 0; padding: 0 20px 18px; color: #657087; line-height: 1.65; }
+.generated-body__faq-item p { margin: 0; padding: 0 20px 18px; color: var(--section-text-color, #657087); line-height: 1.65; }
 .generated-body__features { padding: clamp(32px, 7vw, 88px); }
 .generated-body__feature-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 20px; }
 .generated-body__feature { padding: 22px; border-radius: 12px; background: rgba(255,255,255,.72); }
@@ -1655,9 +1797,18 @@ ${faqStructuredData}`;
                 refreshBodyPreview();
             });
         });
-        ["headerBackground", "bodyBlockBackground", "bodyTextGray"].forEach((inputId) => {
+        ["headerBackground", "bodyBlockBackground", "bodyTextColor", "bodyTextGray"].forEach((inputId) => {
             const input = document.getElementById(inputId);
             if (input) input.addEventListener("input", () => {
+                const colorKey = inputId === "bodyBlockBackground"
+                    ? "background"
+                    : inputId === "bodyTextColor"
+                        ? "text"
+                        : "";
+                if (colorKey) {
+                    bodySections.querySelectorAll(`[data-section-color="${colorKey}"][data-color-override="false"]`)
+                        .forEach((sectionColor) => { sectionColor.value = input.value; });
+                }
                 render(settingsFromForm());
                 refreshBodyPreview();
             });
@@ -1797,3 +1948,27 @@ ${faqStructuredData}`;
         });
 
         initialize();
+
+        document.addEventListener("DOMContentLoaded", () => {
+            const storageKey = "site_builder_storage_consent";
+            const banner = document.getElementById("cookie-banner");
+            const acceptButton = document.getElementById("cookie-accept");
+            const declineButton = document.getElementById("cookie-decline");
+
+            if (!localStorage.getItem(storageKey)) {
+                banner.style.display = "block";
+            }
+
+            const handleConsent = (level) => {
+                localStorage.setItem(storageKey, level);
+                banner.style.display = "none";
+                if (level === "all") {
+                    console.log("Увімкнено локальне збереження + аналітику");
+                } else {
+                    console.log("Увімкнено лише локальне збереження налаштувань");
+                }
+            };
+
+            acceptButton.addEventListener("click", () => handleConsent("all"));
+            declineButton.addEventListener("click", () => handleConsent("local_only"));
+        });

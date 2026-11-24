@@ -22,6 +22,7 @@
         .layout { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 20px; }
         .panel h2 { font-size: 1.15rem; }
         .field { display: grid; gap: 6px; margin-bottom: 16px; }
+        .field-label { display: grid; gap: 6px; margin-bottom: 0; }
         label, legend { font-weight: 600; font-size: .92rem; margin-bottom: 6px; }
         input, textarea, select, button { font: inherit; }
         select { border: 1px solid #cbd1df; border-radius: 7px; padding: 10px 11px; color: inherit; background: #fff; }
@@ -115,6 +116,14 @@
         .section-collapse::before { content: "−"; display: inline-grid; width: 24px; height: 24px; place-items: center; border: 1px solid #cbd1df; border-radius: 6px; font-size: 1rem; }
         .section-collapse[aria-expanded="false"]::before { content: "+"; }
         .section-settings[hidden] { display: none; }
+        .section-color-settings { margin-bottom: 16px; border: 1px solid #dfe3ea; border-radius: 7px; background: #fff; }
+        .section-color-settings summary { padding: 10px 12px; cursor: pointer; font-size: .9rem; }
+        .section-color-fields { display: flex; flex-wrap: wrap; gap: 12px; padding: 0 12px 12px; }
+        .section-color-fields .color-field { flex: 1 1 150px; justify-content: space-between; margin: 0; }
+        .text-align-toolbar { display: flex; align-items: center; flex-wrap: wrap; gap: 4px; }
+        .text-align-toolbar > span { margin-right: 2px; color: #657087; font-size: .78rem; font-weight: 500; }
+        .text-align-button { min-height: 30px; padding: 4px 8px; border: 1px solid #cbd1df; border-radius: 5px; background: #f8f9fc; color: #404860; font-size: .76rem; font-weight: 550; }
+        .text-align-button[aria-pressed="true"] { border-color: #5146e5; background: #eeedff; color: #3429c6; }
         .body-section.is-collapsed .section-actions { margin-bottom: 0; }
         .section-enabled { display: flex; align-items: center; gap: 6px; margin-left: auto; font-size: .85rem; font-weight: 500; }
         .section-enabled input { margin: 0; }
