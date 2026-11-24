@@ -83,7 +83,8 @@
                                     address: "м. Київ, вул. Хрещатик, 24",
                                     phone: "",
                                     email: "",
-                                    socials: "",
+                                    socials: [],
+                                    headingColor: "#f9fafb",
                                     newsletterEnabled: false,
                                     newsletterTitle: "Підписка на новини",
                                     newsletterText: "Отримуйте актуальні оновлення, корисні матеріали та спеціальні пропозиції першими.",
@@ -134,6 +135,57 @@
             return String(value).replace(/[&<>"']/g, (character) => ({
                 "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"
             })[character]);
+        }
+
+        function sanitizeSvgIcon(value, fieldName) {
+            const markup = String(value || "").trim();
+            if (!markup) return "";
+            if (markup.length > 10000) throw new Error(`${fieldName}: SVG не має перевищувати 10 КБ.`);
+            const svgDocument = new DOMParser().parseFromString(markup, "image/svg+xml");
+            const root = svgDocument.documentElement;
+            if (root.localName !== "svg" ||
+                (root.namespaceURI && root.namespaceURI !== "http://www.w3.org/2000/svg") ||
+                svgDocument.querySelector("parsererror")) {
+                throw new Error(`${fieldName}: введіть коректний SVG-код.`);
+            }
+            const allowedElements = new Set(["svg", "g", "path", "circle", "rect", "line", "polyline", "polygon", "ellipse"]);
+            const allowedAttributes = new Set([
+                "viewBox", "width", "height", "fill", "stroke", "stroke-width", "stroke-linecap",
+                "stroke-linejoin", "fill-rule", "clip-rule", "d", "points", "cx", "cy", "r",
+                "rx", "ry", "x", "y", "x1", "y1", "x2", "y2", "xmlns"
+            ]);
+            const numeric = /^-?(?:\d+\.?\d*|\.\d+)$/;
+            const safeAttribute = (name, attributeValue) => {
+                const normalized = attributeValue.trim();
+                if (name === "xmlns") return normalized === "http://www.w3.org/2000/svg";
+                if (name === "viewBox") return /^-?[\d.]+[,\s]+-?[\d.]+[,\s]+[\d.]+[,\s]+[\d.]+$/.test(normalized);
+                if (["width", "height"].includes(name)) return /^\d+(?:\.\d+)?(?:px|em|rem|%)?$/.test(normalized);
+                if (["fill", "stroke"].includes(name)) return /^(?:none|currentColor|transparent|#[\da-f]{3,8}|[a-z]{1,20})$/i.test(normalized);
+                if (name === "stroke-linecap") return ["butt", "round", "square"].includes(normalized);
+                if (name === "stroke-linejoin") return ["miter", "round", "bevel"].includes(normalized);
+                if (["fill-rule", "clip-rule"].includes(name)) return ["nonzero", "evenodd"].includes(normalized);
+                if (["d", "points"].includes(name)) return /^[-+0-9.eE,\sMmZzLlHhVvCcSsQqTtAa]*$/.test(normalized);
+                return numeric.test(normalized);
+            };
+            const cleanElement = (element) => {
+                [...element.children].forEach((child) => {
+                    if (!allowedElements.has(child.localName)) {
+                        child.remove();
+                        return;
+                    }
+                    cleanElement(child);
+                });
+                [...element.attributes].forEach((attribute) => {
+                    if (!allowedAttributes.has(attribute.name) ||
+                        !safeAttribute(attribute.name, attribute.value)) {
+                        element.removeAttribute(attribute.name);
+                    }
+                });
+            };
+            cleanElement(root);
+            if (!root.hasAttribute("viewBox")) root.setAttribute("viewBox", "0 0 24 24");
+            root.setAttribute("xmlns", "http://www.w3.org/2000/svg");
+            return new XMLSerializer().serializeToString(root);
         }
 
         function hexToRgba(hex, opacity) {
@@ -395,15 +447,30 @@
                             throw new Error(`${blockLabel}: вкажіть коректну email-адресу.`);
                         }
                         const privacyUrl = safeUrl(text(section.privacyUrl, "URL політики конфіденційності"), `URL політики (${blockLabel})`);
-                        const socials = typeof section.socials === "string"
+                        const socialInputs = typeof section.socials === "string"
                             ? section.socials.split("\n").map((line) => {
                                 const [label = "", url = ""] = line.split("|").map((part) => part.trim());
                                 return { label, url };
                             }).filter((item) => item.label && item.url)
                             : Array.isArray(section.socials)
-                                ? section.socials.map((item) => ({ label: text(item.label, "назва соцмережі"), url: safeUrl(text(item.url, "URL соцмережі"), `URL соцмережі (${blockLabel})`) })).filter((item) => item.label && item.url)
+                                ? section.socials.map((item, socialIndex) => {
+                                    if (!item || typeof item !== "object") {
+                                        throw new Error(`${blockLabel}: соцмережа ${socialIndex + 1} має бути об’єктом.`);
+                                    }
+                                    const label = text(item.label, "назва соцмережі");
+                                    const url = text(item.url, "URL соцмережі");
+                                    const icon = sanitizeSvgIcon(item.icon, `SVG-іконка соцмережі ${socialIndex + 1} (${blockLabel})`);
+                                    return { label, url, icon };
+                                }).filter((item) => item.label && item.url)
                                 : [];
-                        socials.forEach((social) => safeUrl(social.url, `URL соцмережі (${blockLabel})`));
+                        const socials = socialInputs.map((social, socialIndex) => ({
+                            ...social,
+                            url: safeUrl(social.url, `URL соцмережі ${socialIndex + 1} (${blockLabel})`)
+                        }));
+                        const headingColor = section.headingColor === undefined ? "#f9fafb" : section.headingColor;
+                        if (typeof headingColor !== "string" || !/^#[0-9a-f]{6}$/i.test(headingColor)) {
+                            throw new Error(`${blockLabel}: колір заголовків footer має бути в HEX-форматі #RRGGBB.`);
+                        }
                         return {
                             ...sectionBase,
                             brand: text(section.brand, "назва бренду"),
@@ -412,6 +479,7 @@
                             phone,
                             email,
                             socials,
+                            headingColor,
                             newsletterEnabled: section.newsletterEnabled === true,
                             newsletterTitle: text(section.newsletterTitle, "заголовок підписки"),
                             newsletterText: text(section.newsletterText, "текст підписки"),
@@ -797,10 +865,16 @@
                 addBodyField(settings, "address", "Адреса", sectionData.address);
                 addBodyField(settings, "phone", "Телефон", sectionData.phone);
                 addBodyField(settings, "email", "Email", sectionData.email);
-                addBodyField(settings, "socials", "Соцмережі (кожен рядок: назва | URL, наприклад Instagram | https://instagram.com/brand)",
-                    Array.isArray(sectionData.socials)
-                        ? sectionData.socials.map((social) => `${social.label || ""} | ${social.url || ""}`).join("\n")
-                        : (sectionData.socials || ""));
+                const headingColorField = document.createElement("label");
+                headingColorField.className = "color-field";
+                headingColorField.appendChild(document.createTextNode("Колір заголовків footer "));
+                const headingColorInput = document.createElement("input");
+                headingColorInput.type = "color";
+                headingColorInput.dataset.footerHeadingColor = "true";
+                headingColorInput.value = sectionData.headingColor || "#f9fafb";
+                headingColorField.appendChild(headingColorInput);
+                settings.appendChild(headingColorField);
+                addFooterSocialEditor(settings, sectionData.socials || []);
                 const newsletterToggle = document.createElement("label");
                 newsletterToggle.className = "option";
                 const newsletterCheckbox = document.createElement("input");
@@ -822,6 +896,64 @@
             }
             settings.addEventListener("input", () => refreshBodyPreview());
             bodySections.appendChild(card);
+        }
+
+        function addFooterSocialRow(container, social = {}) {
+            const row = document.createElement("div");
+            row.className = "footer-social-row";
+            [
+                ["icon", "SVG-іконка", "textarea", "Вставте код SVG-іконки"],
+                ["label", "Назва соцмережі", "input", "Наприклад, Instagram"],
+                ["url", "URL соцмережі", "input", "https://instagram.com/brand"]
+            ].forEach(([key, labelText, elementName, placeholder]) => {
+                const field = document.createElement("label");
+                field.className = "field";
+                field.appendChild(document.createTextNode(labelText));
+                const input = document.createElement(elementName);
+                if (elementName === "input") input.type = "text";
+                input.dataset.footerSocialField = key;
+                input.placeholder = placeholder;
+                input.value = social[key] || "";
+                field.appendChild(input);
+                row.appendChild(field);
+            });
+            const removeButton = document.createElement("button");
+            removeButton.className = "remove-link";
+            removeButton.type = "button";
+            removeButton.textContent = "-";
+            removeButton.setAttribute("aria-label", `Видалити соцмережу ${social.label || ""}`.trim());
+            removeButton.addEventListener("click", () => {
+                row.remove();
+                refreshBodyPreview();
+                scheduleAutosave();
+            });
+            row.appendChild(removeButton);
+            container.querySelector(".footer-social-rows").appendChild(row);
+            return row;
+        }
+
+        function addFooterSocialEditor(section, socials) {
+            const editor = document.createElement("div");
+            editor.className = "field footer-social-editor";
+            const heading = document.createElement("div");
+            heading.className = "footer-social-editor__heading";
+            heading.textContent = "Соцмережі";
+            const rows = document.createElement("div");
+            rows.className = "footer-social-rows";
+            editor.append(heading, rows);
+            (Array.isArray(socials) ? socials : []).forEach((social) => addFooterSocialRow(editor, social));
+            const addButton = document.createElement("button");
+            addButton.className = "secondary";
+            addButton.type = "button";
+            addButton.textContent = "+ соцмережу";
+            addButton.addEventListener("click", () => {
+                const row = addFooterSocialRow(editor);
+                row.querySelector("[data-footer-social-field='icon']").focus();
+                refreshBodyPreview();
+                scheduleAutosave();
+            });
+            editor.appendChild(addButton);
+            section.appendChild(editor);
         }
 
         function sectionsFromForm(container = bodySections) {
@@ -874,15 +1006,12 @@
                 }
                 if (section.type === "footer") {
                     section.newsletterEnabled = card.querySelector("[data-footer-newsletter-enabled]").checked;
-                    section.socials = String(section.socials || "")
-                        .split("\n")
-                        .map((line) => line.trim())
-                        .filter(Boolean)
-                        .map((line) => {
-                            const [label = "", url = ""] = line.split("|").map((part) => part.trim());
-                            return { label, url };
-                        })
-                        .filter((social) => social.label || social.url);
+                    section.headingColor = card.querySelector("[data-footer-heading-color]").value;
+                    section.socials = [...card.querySelectorAll(".footer-social-row")].map((row) => ({
+                        icon: row.querySelector("[data-footer-social-field='icon']").value.trim(),
+                        label: row.querySelector("[data-footer-social-field='label']").value.trim(),
+                        url: row.querySelector("[data-footer-social-field='url']").value.trim()
+                    })).filter((social) => social.icon || social.label || social.url);
                 }
                 return section;
             });
@@ -1204,7 +1333,8 @@
                     address: "",
                     phone: "",
                     email: "",
-                    socials: "",
+                    socials: [],
+                    headingColor: "#f9fafb",
                     newsletterEnabled: false,
                     newsletterTitle: "Підписка на новини",
                     newsletterText: "",
@@ -1494,8 +1624,10 @@ ${bodyMarkup}
               : "";
           return `<section class="generated-body__hero" style="${blockStyle}">${image}
   <div class="generated-body__hero-overlay"></div>
+  <div class="container generated-body__container">
   <div class="generated-body__hero-content">${eyebrow}
     <h1>${escapeHtml(section.title)}</h1>${subtitle}${button}
+  </div>
   </div>
 </section>`;
       }
@@ -1521,9 +1653,11 @@ ${bodyMarkup}
           const list = bullets
               ? `\n    <ul class="generated-body__checklist" style="text-align:${textAlignment("items")};">\n${bullets}\n    </ul>`
               : "";
-          return `<section class="generated-body__about" id="about" style="${blockStyle}">${imageMarkup}
+          return `<section class="generated-body__about" id="about" style="${blockStyle}">
+  <div class="container generated-body__container generated-body__about-layout">${imageMarkup}
   <div class="generated-body__about-content">${eyebrow}
     <h2>${escapeHtml(section.title)}</h2>${text}${list}${button}
+  </div>
   </div>
 </section>`;
       }
@@ -1546,7 +1680,7 @@ ${bodyMarkup}
               ? `\n    <p class="generated-body__description" style="text-align:${textAlignment("intro")};">${escapeHtml(section.intro)}</p>`
               : "";
           return `<section class="generated-body__contact" id="contact" style="${blockStyle}">
-  <div class="generated-body__contact-inner">
+  <div class="container generated-body__container generated-body__contact-inner">
     <p class="generated-body__eyebrow">Contact</p>
     <h2>${escapeHtml(section.title)}</h2>${intro}
     ${details ? `<div class="generated-body__contact-grid">${details}</div>` : ""}
@@ -1559,23 +1693,25 @@ ${bodyMarkup}
   ${item.answer ? `<p style="text-align:${item.answerAlign || "left"};">${escapeHtml(item.answer)}</p>` : ""}
 </details>`).join("\n");
           return `<section class="generated-body__faq" style="${blockStyle}">
+  <div class="container generated-body__container">
   <h2>${escapeHtml(section.title)}</h2>
   <div class="generated-body__faq-list">
 ${items}
+  </div>
   </div>
 </section>`;
       }
       if (section.type === "footer") {
           const socials = (section.socials || []).map((social) =>
-              `<li><a href="${escapeHtml(social.url)}" aria-label="${escapeHtml(social.label)}">${escapeHtml(social.label)}</a></li>`
+              `<li><a href="${escapeHtml(social.url)}" aria-label="${escapeHtml(social.label)}">${social.icon ? `<span class="generated-body__footer-social-icon" aria-hidden="true">${social.icon}</span>` : ""}<span>${escapeHtml(social.label)}</span></a></li>`
           ).join("\n");
           const privacy = section.privacyLabel
               ? `<p>${section.privacyUrl
                   ? `<a href="${escapeHtml(section.privacyUrl)}">${escapeHtml(section.privacyLabel)}</a>`
                   : escapeHtml(section.privacyLabel)}</p>`
               : "";
-          return `<footer class="generated-body__footer" style="${blockStyle}">
-  <div class="generated-body__footer-grid">
+          return `<footer class="generated-body__footer" style="${blockStyle};--footer-heading-color:${section.headingColor}">
+  <div class="container generated-body__container generated-body__footer-grid">
     <div class="generated-body__footer-column">
       ${section.brand ? `<strong class="generated-body__footer-brand">${escapeHtml(section.brand)}</strong>` : ""}
       ${section.about ? `<p>${escapeHtml(section.about)}</p>` : ""}
@@ -1598,7 +1734,7 @@ ${items}
       </form>
     </div>` : ""}
   </div>
-  <div class="generated-body__footer-bottom">
+  <div class="container generated-body__container generated-body__footer-bottom">
     <p>&copy; ${new Date().getFullYear()} ${escapeHtml(section.brand)} ${escapeHtml(section.copyrightText)}</p>
     ${privacy}
   </div>
@@ -1614,8 +1750,10 @@ ${items}
     </article>`;
       }).join("\n");
       return `<section class="generated-body__features" style="${blockStyle}">
+  <div class="container generated-body__container">
   <h2>${escapeHtml(section.title)}</h2>
   <div class="generated-body__feature-grid" style="text-align:${textAlignment("items")};">\n${items}\n  </div>
+  </div>
 </section>`;
       }).join("\n\n");
       const pageHidden = onlyPageIndex === null && renderIndex > 0 ? " hidden" : "";
@@ -1675,6 +1813,7 @@ if (!showGeneratedPage(decodeURIComponent(location.hash.slice(1)))) {
   return `<style>
 .generated-body, .generated-body * { box-sizing: border-box; }
 .generated-body { width: 100%; font-family: inherit; background: ${body.background}; --body-text-gray: ${body.textGray}; }
+.generated-body .container { width: 100%; max-width: 1200px; margin-inline: auto; }
 .generated-body__page[hidden] { display: none; }
 .generated-body__page-switcher { display: flex; align-items: center; gap: 10px; padding: 14px 24px; background: #f3f5fa; color: #202334; font-weight: 600; }
 .generated-body__page-switcher select { min-width: 180px; padding: 9px 12px; border: 1px solid #cbd1df; border-radius: 7px; color: inherit; background: #fff; font: inherit; }
@@ -1688,14 +1827,14 @@ if (!showGeneratedPage(decodeURIComponent(location.hash.slice(1)))) {
 .generated-body__description { margin: 0 0 24px; max-width: 620px; color: var(--section-text-color, var(--body-text-gray)); line-height: 1.65; }
 .generated-body__button { display: inline-flex; align-items: center; justify-content: center; min-height: 44px; padding: 11px 22px; border-radius: 999px; background: #28578f; color: #fff; font-size: .8rem; font-weight: 800; text-decoration: none; text-transform: uppercase; }
 .generated-body__hero .generated-body__button { background: #fff; color: #142238; }
-.generated-body__about { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); align-items: center; gap: clamp(28px, 6vw, 76px); padding: clamp(32px, 7vw, 88px); }
+.generated-body__about { padding: clamp(32px, 7vw, 88px); }
+.generated-body__about-layout { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); align-items: center; gap: clamp(28px, 6vw, 76px); }
 .generated-body__about-images { display: grid; grid-template-columns: 1fr 1fr; grid-template-rows: 1fr 1fr; gap: 14px; align-items: center; }
 .generated-body__about-images img { display: block; width: 100%; height: clamp(120px, 16vw, 210px); object-fit: cover; border-radius: 12px; }
 .generated-body__about-main-image { grid-row: span 2; height: clamp(220px, 26vw, 340px) !important; }
 .generated-body__about-images img:only-child { grid-column: 1 / -1; grid-row: 1 / -1; height: clamp(220px, 30vw, 380px); }
 .generated-body__about-content { max-width: 600px; }
 .generated-body__contact { padding: clamp(32px, 7vw, 88px); }
-.generated-body__contact-inner { max-width: 1120px; margin: 0 auto; }
 .generated-body__contact-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 220px), 1fr)); gap: 14px; margin-top: 28px; }
 .generated-body__contact-card { display: grid; gap: 9px; min-height: 104px; padding: 20px; border: 1px solid rgba(20,34,56,.12); border-radius: 12px; background: rgba(255,255,255,.78); color: inherit; text-decoration: none; overflow-wrap: anywhere; }
 .generated-body__contact-card span { color: var(--section-text-color, #657087); font-size: .78rem; font-weight: 750; letter-spacing: .08em; text-transform: uppercase; }
@@ -1703,7 +1842,7 @@ if (!showGeneratedPage(decodeURIComponent(location.hash.slice(1)))) {
 .generated-body__checklist { display: grid; gap: 12px; margin: 24px 0; padding: 0; list-style: none; }
 .generated-body__checklist li { line-height: 1.5; }
 .generated-body__checklist li::before { content: "✓"; margin-right: 9px; font-weight: 800; }
-.generated-body__faq { max-width: 100%; padding: clamp(32px, 5vw, 64px) clamp(20px, 12vw, 280px); }
+.generated-body__faq { max-width: 100%; padding: clamp(32px, 5vw, 64px) 24px; }
 .generated-body__faq h2 { max-width: 760px; margin: 0 auto 24px; font-size: clamp(1.8rem, 3vw, 2.8rem); line-height: 1.1; text-align: center; }
 .generated-body__faq-list { max-width: 760px; margin: 0 auto; display: grid; gap: 12px; }
 .generated-body__faq-item { overflow: hidden; border: 1px solid #dfe3ea; border-radius: 8px; background: #fff; }
@@ -1728,7 +1867,10 @@ if (!showGeneratedPage(decodeURIComponent(location.hash.slice(1)))) {
 .generated-body__footer-column a { color: inherit; text-decoration: none; }
 .generated-body__footer-brand { display: block; margin-bottom: 12px; color: #f9fafb; font-size: 1.25rem; }
 .generated-body__footer-socials { display: flex; flex-wrap: wrap; gap: 10px; margin: 0; padding: 0; list-style: none; }
-.generated-body__footer-socials a { display: inline-grid; min-width: 40px; min-height: 40px; place-items: center; padding: 8px; border-radius: 999px; background: #1f2937; color: #f9fafb; }
+.generated-body__footer-socials a { display: inline-flex; align-items: center; gap: 8px; min-height: 40px; padding: 8px 12px; border-radius: 999px; background: #1f2937; color: #f9fafb; }
+.generated-body__footer-social-icon svg { display: block; width: 20px; height: 20px; }
+.generated-body__footer-column h3 { color: var(--footer-heading-color, #f9fafb); }
+.generated-body__footer-brand { color: var(--footer-heading-color, #f9fafb); }
 .generated-body__footer-newsletter { display: grid; gap: 10px; margin-top: 12px; }
 .generated-body__footer-newsletter input { width: 100%; padding: 12px 14px; border: 1px solid #374151; border-radius: 8px; background: #1f2937; color: #fff; }
 .generated-body__footer-newsletter button { min-height: 42px; border: 0; border-radius: 8px; background: #3b82f6; color: #fff; cursor: pointer; }
@@ -1737,7 +1879,7 @@ if (!showGeneratedPage(decodeURIComponent(location.hash.slice(1)))) {
 .generated-body__footer-bottom a { color: #9ca3af; }
 @media (max-width: 700px) {
   .generated-body__hero { min-height: 340px; }
-  .generated-body__about { grid-template-columns: 1fr; }
+  .generated-body__about-layout { grid-template-columns: minmax(0, 1fr); }
   .generated-body__about-images { max-width: 520px; }
   .generated-body__feature-grid { grid-template-columns: minmax(0, 1fr); }
   .generated-body__feature { min-width: 0; }

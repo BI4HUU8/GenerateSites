@@ -110,6 +110,7 @@
               "phone": "",
               "email": "",
               "socials": [],
+              "headingColor": "#f9fafb",
               "newsletterEnabled": false,
               "newsletterTitle": "Підписка на новини",
               "newsletterText": "Отримуйте актуальні оновлення, корисні матеріали та спеціальні пропозиції першими.",

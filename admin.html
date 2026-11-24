@@ -165,12 +165,14 @@
             <details class="settings-details" open>
                 <summary>Кольори сайту</summary>
                 <div class="settings-details-content body-colors">
-                    <label class="field" for="bodyBackground">Фон сайту
-                        <input id="bodyBackground" type="color">
-                    </label>
-                    <label class="field" for="bodyBlockBackground">Фон блоків
-                        <input id="bodyBlockBackground" type="color" value="#ffffff">
-                    </label>
+                    <div class="section-color-fields">
+                        <label class="field" for="bodyBackground">Фон сайту
+                            <input id="bodyBackground" type="color">
+                        </label>
+                        <label class="field" for="bodyBlockBackground">Фон блоків
+                            <input id="bodyBlockBackground" type="color" value="#ffffff">
+                        </label>
+                    </div>
                     <label class="range-control" for="bodyBlockOpacity">
                         <span class="range-control-header"><span>Прозорість фону блоків</span><output id="bodyBlockOpacityValue">100%</output></span>
                         <input id="bodyBlockOpacity" type="range" min="0" max="100" value="100">
