@@ -100,6 +100,22 @@
                   "answer": ""
                 }
               ]
+            },
+            {
+              "type": "footer",
+              "enabled": true,
+              "brand": "NovaTech Studio",
+              "about": "Створюємо сучасні цифрові продукти, зручні сервіси та надійні рішення для розвитку вашого бізнесу.",
+              "address": "м. Київ, вул. Хрещатик, 24",
+              "phone": "",
+              "email": "",
+              "socials": [],
+              "newsletterEnabled": false,
+              "newsletterTitle": "Підписка на новини",
+              "newsletterText": "Отримуйте актуальні оновлення, корисні матеріали та спеціальні пропозиції першими.",
+              "copyrightText": "Усі права захищено.",
+              "privacyLabel": "Політика конфіденційності",
+              "privacyUrl": ""
             }
           ]
         }

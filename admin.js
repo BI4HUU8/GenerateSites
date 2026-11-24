@@ -30,7 +30,7 @@
                     textGray: "#657087",
                     pages: [
                         {
-                            name: "Главная",
+                            name: "Головна",
                             slug: "home",
                             sections: [
                                 {
@@ -74,6 +74,22 @@
                                         { question: "Are your technicians licensed and insured?", answer: "" },
                                         { question: "Do you offer financing for new installations?", answer: "" }
                                     ]
+                                },
+                                {
+                                    type: "footer",
+                                    enabled: true,
+                                    brand: "NovaTech Studio",
+                                    about: "Створюємо сучасні цифрові продукти, зручні сервіси та надійні рішення для розвитку вашого бізнесу.",
+                                    address: "м. Київ, вул. Хрещатик, 24",
+                                    phone: "",
+                                    email: "",
+                                    socials: "",
+                                    newsletterEnabled: false,
+                                    newsletterTitle: "Підписка на новини",
+                                    newsletterText: "Отримуйте актуальні оновлення, корисні матеріали та спеціальні пропозиції першими.",
+                                    copyrightText: "Усі права захищено.",
+                                    privacyLabel: "Політика конфіденційності",
+                                    privacyUrl: ""
                                 }
                             ]
                         }
@@ -257,8 +273,8 @@
                 usedSlugs.add(slug);
                 const sections = page.sections.map((section, index) => {
                     const blockLabel = `Блок ${index + 1} сторінки «${name}»`;
-                    if (!section || !["hero", "about", "contact", "faq", "features"].includes(section.type)) {
-                        throw new Error(`${blockLabel}: підтримуються типи hero, about, contact, faq і features.`);
+                    if (!section || !["hero", "about", "contact", "faq", "features", "footer"].includes(section.type)) {
+                        throw new Error(`${blockLabel}: підтримуються типи hero, about, contact, faq, features і footer.`);
                     }
                     const text = (value, label) => {
                         if (value !== undefined && typeof value !== "string") {
@@ -367,6 +383,41 @@
                                     ...(answerAlign !== "left" ? { answerAlign } : {})
                                 };
                             }).filter((item) => item.question || item.answer)
+                        };
+                    }
+                    if (section.type === "footer") {
+                        const phone = text(section.phone, "телефон");
+                        if (phone && !/^\+?\d{5,15}$/.test(phone.replace(/[^\d+]/g, ""))) {
+                            throw new Error(`${blockLabel}: телефон має містити 5–15 цифр, можна з + на початку.`);
+                        }
+                        const email = text(section.email, "email");
+                        if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+                            throw new Error(`${blockLabel}: вкажіть коректну email-адресу.`);
+                        }
+                        const privacyUrl = safeUrl(text(section.privacyUrl, "URL політики конфіденційності"), `URL політики (${blockLabel})`);
+                        const socials = typeof section.socials === "string"
+                            ? section.socials.split("\n").map((line) => {
+                                const [label = "", url = ""] = line.split("|").map((part) => part.trim());
+                                return { label, url };
+                            }).filter((item) => item.label && item.url)
+                            : Array.isArray(section.socials)
+                                ? section.socials.map((item) => ({ label: text(item.label, "назва соцмережі"), url: safeUrl(text(item.url, "URL соцмережі"), `URL соцмережі (${blockLabel})`) })).filter((item) => item.label && item.url)
+                                : [];
+                        socials.forEach((social) => safeUrl(social.url, `URL соцмережі (${blockLabel})`));
+                        return {
+                            ...sectionBase,
+                            brand: text(section.brand, "назва бренду"),
+                            about: text(section.about, "про компанію"),
+                            address: text(section.address, "адреса"),
+                            phone,
+                            email,
+                            socials,
+                            newsletterEnabled: section.newsletterEnabled === true,
+                            newsletterTitle: text(section.newsletterTitle, "заголовок підписки"),
+                            newsletterText: text(section.newsletterText, "текст підписки"),
+                            copyrightText: text(section.copyrightText, "текст копірайта"),
+                            privacyLabel: text(section.privacyLabel, "назва політики"),
+                            privacyUrl
                         };
                     }
                     if (!Array.isArray(section.items)) throw new Error(`${blockLabel}: items має бути масивом.`);
@@ -640,7 +691,8 @@
                 about: "About — про практику",
                 contact: "Contact — контакти",
                 faq: "FAQ — поширені питання",
-                features: "Features — переваги"
+                features: "Features — переваги",
+                footer: "Footer — підвал сайту"
             }[sectionData.type];
             const collapseButton = document.createElement("button");
             collapseButton.className = "section-collapse";
@@ -739,6 +791,29 @@
                 });
                 faqEditor.append(faqItems, addButton);
                 settings.appendChild(faqEditor);
+            } else if (sectionData.type === "footer") {
+                addBodyField(settings, "brand", "Назва бренду", sectionData.brand);
+                addBodyField(settings, "about", "Про компанію", sectionData.about, true);
+                addBodyField(settings, "address", "Адреса", sectionData.address);
+                addBodyField(settings, "phone", "Телефон", sectionData.phone);
+                addBodyField(settings, "email", "Email", sectionData.email);
+                addBodyField(settings, "socials", "Соцмережі (кожен рядок: назва | URL, наприклад Instagram | https://instagram.com/brand)",
+                    Array.isArray(sectionData.socials)
+                        ? sectionData.socials.map((social) => `${social.label || ""} | ${social.url || ""}`).join("\n")
+                        : (sectionData.socials || ""));
+                const newsletterToggle = document.createElement("label");
+                newsletterToggle.className = "option";
+                const newsletterCheckbox = document.createElement("input");
+                newsletterCheckbox.type = "checkbox";
+                newsletterCheckbox.dataset.footerNewsletterEnabled = "true";
+                newsletterCheckbox.checked = sectionData.newsletterEnabled === true;
+                newsletterToggle.append(newsletterCheckbox, document.createTextNode("Показувати форму підписки на новини"));
+                settings.appendChild(newsletterToggle);
+                addBodyField(settings, "newsletterTitle", "Заголовок підписки", sectionData.newsletterTitle);
+                addBodyField(settings, "newsletterText", "Текст підписки", sectionData.newsletterText, true);
+                addBodyField(settings, "copyrightText", "Текст після © року", sectionData.copyrightText);
+                addBodyField(settings, "privacyLabel", "Назва посилання на конфіденційність", sectionData.privacyLabel);
+                addBodyField(settings, "privacyUrl", "URL політики конфіденційності", sectionData.privacyUrl);
             } else {
                 addBodyField(settings, "title", "Заголовок", sectionData.title);
                 addBodyField(settings, "items", "Переваги: назва | опис | URL іконки (кожна з нового рядка)",
@@ -796,6 +871,18 @@
                                 : {})
                         };
                     }).filter((item) => item.question || item.answer);
+                }
+                if (section.type === "footer") {
+                    section.newsletterEnabled = card.querySelector("[data-footer-newsletter-enabled]").checked;
+                    section.socials = String(section.socials || "")
+                        .split("\n")
+                        .map((line) => line.trim())
+                        .filter(Boolean)
+                        .map((line) => {
+                            const [label = "", url = ""] = line.split("|").map((part) => part.trim());
+                            return { label, url };
+                        })
+                        .filter((social) => social.label || social.url);
                 }
                 return section;
             });
@@ -1106,6 +1193,24 @@
                         { question: "Are your technicians licensed and insured?", answer: "" },
                         { question: "Do you offer financing for new installations?", answer: "" }
                     ]
+                };
+            }
+            if (type === "footer") {
+                return {
+                    type,
+                    enabled: true,
+                    brand: "",
+                    about: "",
+                    address: "",
+                    phone: "",
+                    email: "",
+                    socials: "",
+                    newsletterEnabled: false,
+                    newsletterTitle: "Підписка на новини",
+                    newsletterText: "",
+                    copyrightText: "Усі права захищено.",
+                    privacyLabel: "Політика конфіденційності",
+                    privacyUrl: ""
                 };
             }
             return { type: "features", enabled: true, title: "", items: [] };
@@ -1460,6 +1565,45 @@ ${items}
   </div>
 </section>`;
       }
+      if (section.type === "footer") {
+          const socials = (section.socials || []).map((social) =>
+              `<li><a href="${escapeHtml(social.url)}" aria-label="${escapeHtml(social.label)}">${escapeHtml(social.label)}</a></li>`
+          ).join("\n");
+          const privacy = section.privacyLabel
+              ? `<p>${section.privacyUrl
+                  ? `<a href="${escapeHtml(section.privacyUrl)}">${escapeHtml(section.privacyLabel)}</a>`
+                  : escapeHtml(section.privacyLabel)}</p>`
+              : "";
+          return `<footer class="generated-body__footer" style="${blockStyle}">
+  <div class="generated-body__footer-grid">
+    <div class="generated-body__footer-column">
+      ${section.brand ? `<strong class="generated-body__footer-brand">${escapeHtml(section.brand)}</strong>` : ""}
+      ${section.about ? `<p>${escapeHtml(section.about)}</p>` : ""}
+    </div>
+    <div class="generated-body__footer-column">
+      <h3>Зв'яжіться з нами</h3>
+      ${section.address ? `<p>${escapeHtml(section.address)}</p>` : ""}
+      ${section.phone ? `<p><a href="tel:${escapeHtml(section.phone.replace(/[^\d+]/g, ""))}">${escapeHtml(section.phone)}</a></p>` : ""}
+      ${section.email ? `<p><a href="mailto:${escapeHtml(section.email)}">${escapeHtml(section.email)}</a></p>` : ""}
+    </div>
+    <div class="generated-body__footer-column">
+      ${socials ? `<h3>Ми в соцмережах</h3><ul class="generated-body__footer-socials">${socials}</ul>` : ""}
+    </div>
+    ${section.newsletterEnabled ? `<div class="generated-body__footer-column">
+      ${section.newsletterTitle ? `<h3>${escapeHtml(section.newsletterTitle)}</h3>` : ""}
+      ${section.newsletterText ? `<p>${escapeHtml(section.newsletterText)}</p>` : ""}
+      <form class="generated-body__footer-newsletter" action="#" method="post">
+        <input type="email" aria-label="Email" placeholder="Введіть ваш email" required>
+        <button type="submit">Підписатися</button>
+      </form>
+    </div>` : ""}
+  </div>
+  <div class="generated-body__footer-bottom">
+    <p>&copy; ${new Date().getFullYear()} ${escapeHtml(section.brand)} ${escapeHtml(section.copyrightText)}</p>
+    ${privacy}
+  </div>
+</footer>`;
+      }
       const items = section.items.map((item) => {
           const icon = item.icon
               ? `\n      <img src="${escapeHtml(item.icon)}" alt="" loading="lazy">`
@@ -1576,6 +1720,21 @@ if (!showGeneratedPage(decodeURIComponent(location.hash.slice(1)))) {
 .generated-body__feature img { width: 42px; height: 42px; object-fit: contain; }
 .generated-body__feature h3 { margin: 12px 0 8px; }
 .generated-body__feature p { margin: 0; line-height: 1.55; }
+.generated-body__footer { padding: 64px 24px 32px; background: #111827 !important; color: #9ca3af; }
+.generated-body__footer-grid { max-width: 1200px; margin: 0 auto; display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 40px; }
+.generated-body__footer-column { min-width: 0; }
+.generated-body__footer-column h3 { margin: 0 0 16px; color: #f9fafb; }
+.generated-body__footer-column p { line-height: 1.6; }
+.generated-body__footer-column a { color: inherit; text-decoration: none; }
+.generated-body__footer-brand { display: block; margin-bottom: 12px; color: #f9fafb; font-size: 1.25rem; }
+.generated-body__footer-socials { display: flex; flex-wrap: wrap; gap: 10px; margin: 0; padding: 0; list-style: none; }
+.generated-body__footer-socials a { display: inline-grid; min-width: 40px; min-height: 40px; place-items: center; padding: 8px; border-radius: 999px; background: #1f2937; color: #f9fafb; }
+.generated-body__footer-newsletter { display: grid; gap: 10px; margin-top: 12px; }
+.generated-body__footer-newsletter input { width: 100%; padding: 12px 14px; border: 1px solid #374151; border-radius: 8px; background: #1f2937; color: #fff; }
+.generated-body__footer-newsletter button { min-height: 42px; border: 0; border-radius: 8px; background: #3b82f6; color: #fff; cursor: pointer; }
+.generated-body__footer-bottom { max-width: 1200px; margin: 48px auto 0; padding-top: 24px; border-top: 1px solid #1f2937; display: flex; justify-content: space-between; flex-wrap: wrap; gap: 12px; }
+.generated-body__footer-bottom p { margin: 0; }
+.generated-body__footer-bottom a { color: #9ca3af; }
 @media (max-width: 700px) {
   .generated-body__hero { min-height: 340px; }
   .generated-body__about { grid-template-columns: 1fr; }
