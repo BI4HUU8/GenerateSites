@@ -49,7 +49,7 @@
                                     eyebrow: "Над заголовок",
                                     title: "Заголовок",
                                     text: "Текст підзаголовка.",
-                                    images: ["/images/1.jpg", "/images/2.jpg", "/images/3.jpg"],
+                                    images: ["/images/1.jpg"],
                                     items: ["Текст.", "Текст.", "Текст.", "Текст."],
                                     buttonLabel: "Познакомьтесь с командой",
                                     buttonUrl: "/team"
@@ -209,10 +209,10 @@
         function safeUrl(value, fieldName) {
             const url = value.trim();
             if (!url) return "";
-            if (/^(https?:|mailto:|tel:)/i.test(url) || /^(\/|\.\/|\.\.\/|#|\?)/.test(url)) {
+            if (/^(https?:|mailto:|tel:)/i.test(url) || !/^[a-z][a-z0-9+.-]*:/i.test(url)) {
                 return url;
             }
-            throw new Error(`${fieldName}: використовуйте http(s), mailto, tel або відносний URL.`);
+            throw new Error(`${fieldName}: використовуйте відносний URL або схему http(s), mailto чи tel.`);
         }
 
         function readSettings(value) {
@@ -388,7 +388,7 @@
                             eyebrow: text(section.eyebrow, "надзаголовок"),
                             title: text(section.title, "заголовок"),
                             text: text(section.text ?? section.description, "опис"),
-                            images: section.images.map((image, imageIndex) =>
+                            images: section.images.slice(0, 1).map((image, imageIndex) =>
                                 safeUrl(String(image || ""), `Зображення ${imageIndex + 1} (${blockLabel})`)
                             ).filter(Boolean),
                             items: section.items.map((item) => text(item, "пункт списку")).filter(Boolean),
@@ -830,7 +830,7 @@
                 addBodyField(settings, "eyebrow", "Надзаголовок", sectionData.eyebrow);
                 addBodyField(settings, "title", "Заголовок", sectionData.title);
                 addBodyField(settings, "text", "Опис", sectionData.text || sectionData.description, true, "", sectionData.textAlign?.text);
-                addBodyField(settings, "images", "URL зображень (кожне з нового рядка)", (sectionData.images || []).join("\n"), true);
+                addBodyField(settings, "images", "URL фото (одне зображення)", sectionData.images?.[0] || "", false, "/images/about.jpg");
                 addBodyField(settings, "items", "Пункти списку (кожен з нового рядка)", (sectionData.items || []).join("\n"), true, "", sectionData.textAlign?.items);
                 addBodyField(settings, "buttonLabel", "Текст кнопки", sectionData.buttonLabel);
                 addBodyField(settings, "buttonUrl", "URL кнопки", sectionData.buttonUrl, false, "#contact");
@@ -1399,6 +1399,9 @@
             const background = header.blackTheme ? "#111111" : header.background;
             const textColor = header.blackTheme ? "#ffffff" : header.textColor;
             preview.replaceChildren();
+            const container = document.createElement("div");
+            container.className = "container";
+            preview.appendChild(container);
             preview.classList.toggle("is-air", header.air);
             preview.style.background = hexToRgba(background, header.backgroundOpacity);
             preview.style.backdropFilter = `blur(${header.backgroundBlur}px)`;
@@ -1411,7 +1414,7 @@
                 text.href = "index.html";
                 text.textContent = header.logoText;
                 text.style.color = textColor;
-                preview.appendChild(text);
+                container.appendChild(text);
             } else if (header.logo) {
                 const image = document.createElement("img");
                 image.src = header.logo;
@@ -1420,7 +1423,7 @@
                 logoLink.href = "index.html";
                 logoLink.setAttribute("aria-label", "На головну");
                 logoLink.appendChild(image);
-                preview.appendChild(logoLink);
+                container.appendChild(logoLink);
             }
             const nav = document.createElement("nav");
             nav.setAttribute("aria-label", "Основна навігація");
@@ -1440,11 +1443,11 @@
                 return phone;
             };
             if (header.telephoneEnabled && header.telephonePosition !== "after") {
-                preview.appendChild(phoneMarkupPreview());
+                container.appendChild(phoneMarkupPreview());
             }
-            preview.appendChild(nav);
+            container.appendChild(nav);
             if (header.telephoneEnabled && header.telephonePosition === "after") {
-                preview.appendChild(phoneMarkupPreview());
+                container.appendChild(phoneMarkupPreview());
             }
             const modes = [];
             if (header.air) modes.push("Air: прозора шапка поверх наступного блоку");
@@ -1488,30 +1491,30 @@
   ${header.air || header.fixed ? "top: 0; left: 0; right: 0;" : ""}
   z-index: 1000;
   width: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 20px;
   padding: 16px 24px;
   background: ${generatedBackground};
   backdrop-filter: blur(${header.backgroundBlur}px);
   -webkit-backdrop-filter: blur(${header.backgroundBlur}px);
   color: ${textColor};
 }
+.generated-header .container { display: flex; align-items: center; justify-content: space-between; gap: 20px; width: 100%; max-width: 1200px; margin: 0 auto; }
 .generated-header__logo img { display: block; max-width: 150px; max-height: 44px; width: auto; object-fit: contain; }
 .generated-header__logo--text { color: inherit; font-size: 1.25rem; font-weight: 800; text-decoration: none; }
 .generated-header__phone, .generated-header__nav a { color: inherit; text-decoration: none; }
 .generated-header__nav { display: flex; flex-wrap: wrap; gap: 18px; }
 @media (max-width: 640px) {
-  .generated-header { flex-direction: column; align-items: flex-start; gap: 12px; padding: 14px 16px; }
+  .generated-header { padding: 14px 16px; }
+  .generated-header .container { flex-direction: column; align-items: flex-start; gap: 12px; }
   .generated-header__nav { width: 100%; gap: 12px 16px; }
 }
 </style>
 <header class="generated-header">
+<div class="container">
 ${logoMarkup}${header.telephoneEnabled && header.telephonePosition !== "after" ? phoneMarkup : ""}  <nav class="generated-header__nav" aria-label="Основна навігація">
 ${linkMarkup}
   </nav>
 ${header.telephoneEnabled && header.telephonePosition === "after" ? phoneMarkup : ""}
+</div>
 </header>`;
   const bodyMarkup = generateBodyHtml(body, pageIndex, false);
   const pageTitle = body.pages[pageIndex]?.name || "Сайт";
