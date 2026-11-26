@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+  <meta charset="UTF-8">
+  <title>Управління товарами</title>
+</head>
+<body>
+  <h2>Додати товар</h2>
+  <input type="text" id="name" placeholder="Назва товару">
+  <input type="number" id="price" placeholder="Ціна">
+  <button onclick="addProduct()">Додати</button>
+
+  <h2>Список товарів</h2>
+  <ul id="list"></ul>
+
+  <script>
+    const API_URL = '/api/products';
+
+    // Завантаження списку
+    async function loadProducts() {
+      const res = await fetch(API_URL);
+      const products = await res.json();
+      const list = document.getElementById('list');
+      list.innerHTML = products.map(p => `
+        <li>
+          <b>${p.name}</b> — ${p.price} грн
+          <button onclick="editProduct(${p.id}, '${p.name}', ${p.price})">Редагувати</button>
+          <button onclick="deleteProduct(${p.id})">Видалити</button>
+        </li>
+      `).join('');
+    }
+
+    // Додавання
+    async function addProduct() {
+      const name = document.getElementById('name').value;
+      const price = document.getElementById('price').value;
+      if (!name || !price) return alert('Заповніть поля');
+
+      await fetch(API_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name, price: Number(price) })
+      });
+      document.getElementById('name').value = '';
+      document.getElementById('price').value = '';
+      loadProducts();
+    }
+
+    // Редагування
+    async function editProduct(id, oldName, oldPrice) {
+      const name = prompt('Нова назва:', oldName);
+      const price = prompt('Нова ціна:', oldPrice);
+      if (!name || !price) return;
+
+      await fetch(API_URL, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id, name, price: Number(price) })
+      });
+      loadProducts();
+    }
+
+    // Видалення
+    async function deleteProduct(id) {
+      if (!confirm('Видалити товар?')) return;
+      await fetch(`${API_URL}?id=${id}`, { method: 'DELETE' });
+      loadProducts();
+    }
+
+    loadProducts();
+  </script>
+</body>
+</html>
