@@ -1,0 +1,16 @@
+{
+  "name": "my-shop",
+  "main": "src/index.js",
+  "compatibility_date": "2026-11-01",
+  "assets": {
+    "directory": "./public",
+    "binding": "ASSETS"
+  },
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "shop-db",
+      "database_id": "95507330-69a3-4f23-be3e-f6f4b9cc9e94"
+    }
+  ]
+}
