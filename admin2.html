@@ -1,0 +1,369 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Адмінка — тест</title>
+<style>
+  :root {
+    --bg: #0f1115;
+    --panel: #171a21;
+    --panel-2: #1e222b;
+    --border: #2a2f3a;
+    --text: #e6e9ef;
+    --muted: #8b93a3;
+    --accent: #f6821f;
+    --ok: #2fbf71;
+    --err: #ef5350;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font: 15px/1.5 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  }
+  .wrap { max-width: 980px; margin: 0 auto; padding: 28px 20px 60px; }
+  h1 { font-size: 20px; margin: 0 0 4px; }
+  .sub { color: var(--muted); font-size: 13px; margin-bottom: 24px; }
+  .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
+  @media (max-width: 820px) { .grid { grid-template-columns: 1fr; } }
+  .card {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 18px;
+  }
+  .card h2 {
+    font-size: 13px;
+    text-transform: uppercase;
+    letter-spacing: .06em;
+    color: var(--muted);
+    margin: 0 0 14px;
+    font-weight: 600;
+  }
+  label { display: block; font-size: 12px; color: var(--muted); margin: 12px 0 5px; }
+  label:first-of-type { margin-top: 0; }
+  input, textarea {
+    width: 100%;
+    background: var(--panel-2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    color: var(--text);
+    padding: 9px 11px;
+    font: inherit;
+    font-size: 14px;
+  }
+  input:focus, textarea:focus { outline: none; border-color: var(--accent); }
+  textarea { resize: vertical; min-height: 150px; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 13px; }
+  .row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .actions { display: flex; gap: 10px; align-items: center; margin-top: 18px; flex-wrap: wrap; }
+  button {
+    border: 1px solid var(--border);
+    background: var(--panel-2);
+    color: var(--text);
+    padding: 10px 16px;
+    border-radius: 8px;
+    font: inherit;
+    font-weight: 600;
+    cursor: pointer;
+  }
+  button:hover { border-color: #3a4150; }
+  button.primary { background: var(--accent); border-color: var(--accent); color: #1a1205; }
+  button.primary:hover { filter: brightness(1.08); }
+  button:disabled { opacity: .5; cursor: default; }
+  .status {
+    margin-top: 16px;
+    padding: 11px 13px;
+    border-radius: 8px;
+    font-size: 13px;
+    background: var(--panel-2);
+    border: 1px solid var(--border);
+    color: var(--muted);
+    white-space: pre-wrap;
+    word-break: break-word;
+  }
+  .status.ok { border-color: rgba(47,191,113,.45); color: #9be3bd; }
+  .status.err { border-color: rgba(239,83,80,.45); color: #ffb3b1; }
+  .status a { color: inherit; }
+  .preview {
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    overflow: hidden;
+    background: #fff;
+    height: 420px;
+  }
+  .preview iframe { width: 100%; height: 100%; border: 0; display: block; }
+  .hint { font-size: 12px; color: var(--muted); margin-top: 6px; }
+  details summary { cursor: pointer; color: var(--muted); font-size: 13px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Адмінка — тест</h1>
+  <div class="sub">Генерує сторінку й оновлює її в репозиторії. Cloudflare задеплоїть автоматично після коміту.</div>
+
+  <div class="grid">
+    <div>
+      <div class="card">
+        <h2>Підключення</h2>
+        <div class="row">
+          <div>
+            <label for="owner">GitHub owner</label>
+            <input id="owner" placeholder="be4huu" autocomplete="off">
+          </div>
+          <div>
+            <label for="repo">Репозиторій</label>
+            <input id="repo" placeholder="my-site" autocomplete="off">
+          </div>
+        </div>
+        <div class="row">
+          <div>
+            <label for="branch">Гілка</label>
+            <input id="branch" value="main" autocomplete="off">
+          </div>
+          <div>
+            <label for="path">Шлях до файлу</label>
+            <input id="path" value="public/test.html" autocomplete="off">
+          </div>
+        </div>
+        <label for="token">GitHub token (fine-grained, Contents: Read and write)</label>
+        <input id="token" type="password" placeholder="github_pat_..." autocomplete="off">
+        <div class="hint">Зберігається лише у localStorage цього браузера.</div>
+
+        <details style="margin-top:14px">
+          <summary>Адреса сайту (для посилання після оновлення)</summary>
+          <label for="siteUrl">URL</label>
+          <input id="siteUrl" placeholder="https://my-site.be4huu.workers.dev">
+        </details>
+
+        <div class="actions">
+          <button id="btnCheck">Перевірити з'єднання</button>
+        </div>
+      </div>
+
+      <div class="card" style="margin-top:18px">
+        <h2>Сторінка</h2>
+        <label for="title">Заголовок</label>
+        <input id="title" value="Тестова сторінка">
+
+        <label for="desc">Опис</label>
+        <input id="desc" value="Створено з адмінки">
+
+        <label for="body">Текст (HTML)</label>
+        <textarea id="body">&lt;p&gt;Якщо ви бачите цю сторінку — адмінка працює.&lt;/p&gt;
+&lt;p&gt;Час створення: &lt;strong id="stamp"&gt;&lt;/strong&gt;&lt;/p&gt;
+&lt;script&gt;document.getElementById('stamp').textContent = new Date().toLocaleString('uk-UA');&lt;/script&gt;</textarea>
+
+        <div class="actions">
+          <button id="btnUpdate" class="primary">Оновити</button>
+          <button id="btnPreview">Оновити прев'ю</button>
+        </div>
+        <div id="status" class="status">Готово до роботи.</div>
+      </div>
+    </div>
+
+    <div class="card" style="align-self:start">
+      <h2>Прев'ю</h2>
+      <div class="preview"><iframe id="preview" title="Прев'ю"></iframe></div>
+    </div>
+  </div>
+</div>
+
+<script>
+(function () {
+  "use strict";
+
+  var $ = function (id) { return document.getElementById(id); };
+  var FIELDS = ["owner", "repo", "branch", "path", "token", "siteUrl"];
+
+  // ---------- налаштування ----------
+  FIELDS.forEach(function (key) {
+    var saved = localStorage.getItem("admin_" + key);
+    if (saved !== null && $(key)) $(key).value = saved;
+    $(key).addEventListener("input", function () {
+      localStorage.setItem("admin_" + key, $(key).value);
+    });
+  });
+
+  function cfg() {
+    return {
+      owner: $("owner").value.trim(),
+      repo: $("repo").value.trim(),
+      branch: $("branch").value.trim() || "main",
+      path: $("path").value.trim().replace(/^\/+/, ""),
+      token: $("token").value.trim(),
+      siteUrl: $("siteUrl").value.trim()
+    };
+  }
+
+  function setStatus(msg, kind) {
+    var el = $("status");
+    el.className = "status" + (kind ? " " + kind : "");
+    el.innerHTML = msg;
+  }
+
+  // ---------- генерація сторінки ----------
+  function escapeHtml(s) {
+    return String(s).replace(/[&<>"']/g, function (c) {
+      return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c];
+    });
+  }
+
+  function buildPage() {
+    var title = $("title").value.trim() || "Без назви";
+    var desc = $("desc").value.trim();
+    var body = $("body").value;
+    return [
+      "<!DOCTYPE html>",
+      '<html lang="uk">',
+      "<head>",
+      '<meta charset="utf-8">',
+      '<meta name="viewport" content="width=device-width, initial-scale=1">',
+      "<title>" + escapeHtml(title) + "</title>",
+      desc ? '<meta name="description" content="' + escapeHtml(desc) + '">' : "",
+      "<style>",
+      "  body{margin:0;font:16px/1.6 -apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;color:#1b1f24;background:#fff}",
+      "  main{max-width:720px;margin:0 auto;padding:56px 20px}",
+      "  h1{font-size:32px;line-height:1.2;margin:0 0 18px}",
+      "  p{color:#3d4653}",
+      "  footer{margin-top:48px;font-size:13px;color:#8b93a3}",
+      "</style>",
+      "</head>",
+      "<body>",
+      "<main>",
+      "<h1>" + escapeHtml(title) + "</h1>",
+      body,
+      "<footer>Оновлено: " + new Date().toISOString().slice(0, 16).replace("T", " ") + " UTC</footer>",
+      "</main>",
+      "</body>",
+      "</html>",
+      ""
+    ].filter(Boolean).join("\n");
+  }
+
+  function renderPreview() {
+    $("preview").srcdoc = buildPage();
+  }
+
+  // ---------- GitHub API ----------
+  function b64utf8(str) {
+    var bytes = new TextEncoder().encode(str);
+    var bin = "";
+    var chunk = 0x8000;
+    for (var i = 0; i < bytes.length; i += chunk) {
+      bin += String.fromCharCode.apply(null, bytes.subarray(i, i + chunk));
+    }
+    return btoa(bin);
+  }
+
+  function apiUrl(c, suffix) {
+    return "https://api.github.com/repos/" + c.owner + "/" + c.repo + "/contents/" + c.path + (suffix || "");
+  }
+
+  function headers(c) {
+    return {
+      "Authorization": "Bearer " + c.token,
+      "Accept": "application/vnd.github+json",
+      "X-GitHub-Api-Version": "2022-11-28",
+      "Content-Type": "application/json"
+    };
+  }
+
+  async function getSha(c) {
+    var res = await fetch(apiUrl(c, "?ref=" + encodeURIComponent(c.branch)), { headers: headers(c) });
+    if (res.status === 404) return null;          // файлу ще немає — це нормально
+    if (!res.ok) throw new Error("GET " + res.status + ": " + (await res.text()).slice(0, 300));
+    var data = await res.json();
+    return data.sha || null;
+  }
+
+  async function putFile(c, content, sha, message) {
+    var payload = {
+      message: message,
+      content: b64utf8(content),
+      branch: c.branch
+    };
+    if (sha) payload.sha = sha;
+    var res = await fetch(apiUrl(c), {
+      method: "PUT",
+      headers: headers(c),
+      body: JSON.stringify(payload)
+    });
+    var text = await res.text();
+    if (!res.ok) {
+      var err = new Error("PUT " + res.status + ": " + text.slice(0, 300));
+      err.status = res.status;
+      throw err;
+    }
+    return JSON.parse(text);
+  }
+
+  function validate(c) {
+    if (!c.owner || !c.repo) return "Заповніть owner і репозиторій.";
+    if (!c.token) return "Вставте GitHub token.";
+    if (!c.path) return "Вкажіть шлях до файлу.";
+    return null;
+  }
+
+  // ---------- дії ----------
+  $("btnCheck").addEventListener("click", async function () {
+    var c = cfg();
+    var problem = validate(c);
+    if (problem) return setStatus(problem, "err");
+    setStatus("Перевіряю доступ…");
+    try {
+      var res = await fetch("https://api.github.com/repos/" + c.owner + "/" + c.repo, { headers: headers(c) });
+      if (!res.ok) throw new Error(res.status + ": " + (await res.text()).slice(0, 200));
+      var repo = await res.json();
+      setStatus("OK — репозиторій <strong>" + repo.full_name + "</strong>, гілка за замовчуванням: " + repo.default_branch, "ok");
+    } catch (e) {
+      setStatus("Помилка: " + e.message, "err");
+    }
+  });
+
+  $("btnUpdate").addEventListener("click", async function () {
+    var c = cfg();
+    var problem = validate(c);
+    if (problem) return setStatus(problem, "err");
+
+    var btn = this;
+    btn.disabled = true;
+    setStatus("Готую коміт…");
+
+    try {
+      var page = buildPage();
+      var sha = await getSha(c);
+      var message = "admin: update " + c.path + " (" + new Date().toISOString() + ")";
+      var result;
+      try {
+        result = await putFile(c, page, sha, message);
+      } catch (e) {
+        // 409 = файл змінили між читанням і записом — беремо свіжий sha і пробуємо ще раз
+        if (e.status === 409) {
+          result = await putFile(c, page, await getSha(c), message);
+        } else {
+          throw e;
+        }
+      }
+
+      var commitUrl = result.commit && result.commit.html_url;
+      var html = "Оновлено: <strong>" + c.path + "</strong> (" + (sha ? "перезаписано" : "створено") + ").";
+      if (commitUrl) html += ' <a href="' + commitUrl + '" target="_blank" rel="noopener">Коміт</a>';
+      if (c.siteUrl) html += ' · <a href="' + c.siteUrl.replace(/\/$/, "") + "/" + c.path.replace(/^public\//, "") + '" target="_blank" rel="noopener">Відкрити сторінку</a>';
+      html += "\nCloudflare запустить збірку автоматично — зазвичай 20–60 секунд.";
+      setStatus(html, "ok");
+    } catch (e) {
+      setStatus("Помилка: " + e.message, "err");
+    } finally {
+      btn.disabled = false;
+    }
+  });
+
+  $("btnPreview").addEventListener("click", renderPreview);
+
+  renderPreview();
+})();
+</script>
+</body>
+</html>
