@@ -69,5 +69,63 @@
 
     loadProducts();
   </script>
+
+  <!-- Cookie consent -->
+<div id="cookie-consent" hidden>
+  <p>Ми використовуємо cookies, щоб сайт працював, і — з вашої згоди — для аналітики.
+     <a href="/privacy.html">Детальніше</a></p>
+  <div class="cc-actions">
+    <button type="button" data-cc="necessary">Тільки необхідні</button>
+    <button type="button" data-cc="all">Прийняти все</button>
+  </div>
+</div>
+<style>
+  #cookie-consent{
+    position:fixed;left:16px;right:16px;bottom:16px;z-index:9999;max-width:720px;margin:0 auto;
+    display:flex;gap:16px;align-items:center;flex-wrap:wrap;justify-content:space-between;
+    padding:16px 18px;border-radius:12px;background:#121926;border:1px solid #223047;
+    color:#e6edf3;font:14px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+    box-shadow:0 12px 32px rgba(0,0,0,.45);
+  }
+  #cookie-consent[hidden]{display:none}
+  #cookie-consent p{margin:0;flex:1 1 320px;color:#c3cfdd}
+  #cookie-consent a{color:#f6821f}
+  #cookie-consent .cc-actions{display:flex;gap:8px;flex-wrap:wrap}
+  #cookie-consent button{
+    padding:9px 14px;border-radius:8px;font:inherit;font-weight:600;cursor:pointer;
+    border:1px solid #2a3a55;background:#0b1220;color:#e6edf3;
+  }
+  #cookie-consent button[data-cc="all"]{background:#f6821f;border-color:#f6821f;color:#10151f}
+</style>
+<script>
+(function () {
+  var KEY = 'cookie_consent_v1';
+  var box = document.getElementById('cookie-consent');
+  function read() { try { return JSON.parse(localStorage.getItem(KEY) || 'null'); } catch (e) { return null; } }
+  function loadOptional() {
+    document.querySelectorAll('script[type="text/plain"][data-cookie]').forEach(function (s) {
+      var n = document.createElement('script');
+      if (s.dataset.src) n.src = s.dataset.src; else n.textContent = s.textContent;
+      document.head.appendChild(n);
+      s.remove();
+    });
+  }
+  function apply(choice) {
+    try { localStorage.setItem(KEY, JSON.stringify({ choice: choice, ts: Date.now() })); } catch (e) {}
+    box.hidden = true;
+    if (choice === 'all') loadOptional();
+    window.dispatchEvent(new CustomEvent('cookieconsent', { detail: { choice: choice } }));
+  }
+  var saved = read();
+  if (!saved) box.hidden = false;
+  else if (saved.choice === 'all') loadOptional();
+  box.addEventListener('click', function (e) {
+    var b = e.target.closest('[data-cc]');
+    if (b) apply(b.dataset.cc);
+  });
+  window.cookieConsent = { get: read, reset: function () { localStorage.removeItem(KEY); location.reload(); } };
+})();
+</script>
+
 </body>
 </html>
